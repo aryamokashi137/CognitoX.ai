@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questionaire</title>
+    <title>SignUp</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
@@ -19,54 +19,32 @@
             <a href="signup.html"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
         </div>
     </header>
+    <main>
+    <div class="auth-page">
+        <div class="auth-card">
+            <h2>Create Your Account</h2>
+            <p class="auth-subtitle">
+                Start your personalized learning journey with CognitoX.ai
+            </p>
 
-    <main class="assessment-page">
-         <div class="assessment-header">
-        <h1><i class="fa-solid fa-user-pen"></i> Learning Assessment</h1>
-        <span class="question-count">Question 1 of 8</span>
+            <form class="auth-form">
+                <input type="text" placeholder="Full Name" required>
+                <input type="username" placeholder="Username" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" placeholder="Confirm Password" required>
+
+                <button type="submit">
+                    Sign Up <i class="fa-solid fa-arrow-right-long"></i>
+                </button>
+            </form>
+
+            <p class="auth-footer-text">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+        </div>
     </div>
-
-    <div class="progress-bar">
-        <div class="progress-fill"></div>
-    </div>
-
-    <div class="question-card">
-
-        <span class="question-tag">Learning Schedule</span>
-
-        <h2>What time of day do you feel most productive for learning?</h2>
-
-        <form class="options-form">
-
-            <label class="option-card">
-                <input type="radio" name="q1">
-                <span>Early morning (5–8 AM)</span>
-            </label>
-
-            <label class="option-card">
-                <input type="radio" name="q1">
-                <span>Morning (8–12 PM)</span>
-            </label>
-
-            <label class="option-card">
-                <input type="radio" name="q1">
-                <span>Afternoon (12–5 PM)</span>
-            </label>
-
-            <label class="option-card">
-                <input type="radio" name="q1">
-                <span>Evening / Night</span>
-            </label>
-
-            <button type="submit" class="next-btn">
-                Next <i class="fa-solid fa-arrow-right"></i>
-            </button>
-
-        </form>
-
-    </div>
-
-    </main>
+</main>
 
     <footer>
         <div class="foot">
