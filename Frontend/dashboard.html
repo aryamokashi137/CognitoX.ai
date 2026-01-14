@@ -19,9 +19,123 @@
             <a href="signup.html"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
         </div>
     </header>
-    <main>
-        <h1>dashboard</h1>   
-    </main>
+    <main class="dashboard">
+    <section class="dashboard-header">
+        <div>
+            <h1>Learning Dashboard</h1>
+            <p>Your personalized learning intelligence report</p>
+        </div>
+        <button class="settings-btn">
+            <i class="fa-solid fa-gear"></i> Settings
+        </button>
+    </section>
+
+    <section class="profile-card">
+        <div class="profile-info">
+            <img src="#" alt="Profile">
+            <div>
+                <h2 style="margin-bottom: 5px;">Arya Mokashi</h2>
+                <span class="badge" style="padding: 8px">IT Student</span>
+            </div>
+        </div>
+        <div class="profile-stats">
+            <div style="border: 5px solid rgb(255, 219, 182);">
+                <h3>85%</h3>
+                <p>Learning Efficiency</p>
+            </div>
+            <div style="border: 5px solid rgb(255, 219, 182);">
+                <h3>Visual Explorer</h3>
+                <p>Learning Style</p>
+            </div>
+            <div style="border: 5px solid rgb(255, 219, 182);">
+                <h3>Explorer</h3>
+                <p>Personality Type</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="ai-section">
+        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Study Recommendations</h2>
+
+        <div class="methods">
+            <div class="method-card">
+                <i class="fa-solid fa-diagram-project"></i>
+                <h4>Visual Mapping</h4>
+                <p>Use diagrams & mind maps</p>
+            </div>
+            <div class="method-card">
+                <i class="fa-solid fa-lightbulb"></i>
+                <h4>Problem-First</h4>
+                <p>Start with challenges</p>
+            </div>
+            <div class="method-card">
+                <i class="fa-solid fa-hand"></i>
+                <h4>Hands-On</h4>
+                <p>Learn by doing</p>
+            </div>
+            <div class="method-card">
+                <i class="fa-solid fa-users"></i>
+                <h4>Collaborative</h4>
+                <p>Group discussions</p>
+            </div>
+        </div>
+
+        <div class="ai-insight">
+            <strong>AI Insight:</strong>
+            You are a dominant <b>Visual Explorer</b>. You learn best through structured visuals combined with hands-on experimentation.
+        </div>
+    </section>
+
+    <section class="profiles">
+
+        <div class="profile-box">
+            <h3>Learning Modality</h3>
+
+            <div class="progress">
+                <span>Visual</span><span>: 62%</span>
+                <div class="bar"><div style="width:62%"></div></div>
+            </div>
+
+            <div class="progress">
+                <span>Reading/Writing</span><span>: 45%</span>
+                <div class="bar"><div style="width:45%"></div></div>
+            </div>
+
+            <div class="progress">
+                <span>Kinesthetic</span><span>: 23%</span>
+                <div class="bar"><div style="width:23%;"></div></div>
+            </div>
+        </div>
+
+        <div class="profile-box">
+            <h3>Personality Profile</h3>
+
+            <div class="trait">
+                <span>Openness</span><span class="tag high">High</span>
+            </div>
+            <div class="trait">
+                <span>Conscientiousness</span><span class="tag high">High</span>
+            </div>
+            <div class="trait">
+                <span>Extraversion</span><span class="tag mid">Moderate</span>
+            </div>
+            <div class="trait">
+                <span>Agreeableness</span><span class="tag high">High</span>
+            </div>
+            <div class="trait">
+                <span>Neuroticism</span><span class="tag mid">Moderate</span>
+            </div>
+
+            <div class="player">
+                <strong>Player Type:</strong> Explorer  
+                <p>Curious, discovery-driven learner</p>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
     <footer>
         <div class="foot">
             <div class="footer-container">
@@ -41,5 +155,7 @@
     </div>
         </div>
     </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
