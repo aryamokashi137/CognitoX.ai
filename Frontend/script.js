@@ -39,30 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // -------------Navbar active link----------------
-    const sections = document.querySelectorAll(".main1, .main2, .main3");
-    const navLinks = document.querySelectorAll(".navbar a");
-
-    window.addEventListener("scroll", function () {
-        let currentSection = "";
-
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 120;
-            const sectionHeight = section.clientHeight;
-
-            if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
-                currentSection = section.getAttribute("id");
-            }
-        });
-
-        navLinks.forEach(link => {
-            link.style.color = "white";
-
-            if (link.getAttribute("href") === "#" + currentSection) {
-                link.style.color = "rgb(247, 165, 165)";
-            }
-        });
-    });
+   
 
 });
 
@@ -318,3 +295,305 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "login.html";
     });
 });
+
+
+//--------tracker page--------
+
+let currentMonth = 0;
+        let currentYear = 2026;
+        let habits = [{ id: 'dummy', name: 'Read for 30 minutes' }];
+        let habitData = {
+            dummy: {
+                '2026-0-1': true,
+                '2026-0-2': true,
+                '2026-0-4': true,
+                '2026-0-5': false,
+                '2026-0-6': true,
+                '2026-0-8': true,
+            }
+        };
+        let pieChart, barChart;
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+
+        function initializeApp() {
+            updateMonthLabel();
+            renderHabitTable();
+            updateStats();
+            initializeCharts();
+            
+            document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+            document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+            document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+            document.getElementById('habitInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addHabit();
+            });
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateMonthLabel();
+            renderHabitTable();
+            updateStats();
+            updateCharts();
+        }
+
+        function updateMonthLabel() {
+            document.getElementById('monthLabel').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        }
+
+        function addHabit() {
+            const input = document.getElementById('habitInput');
+            const habitName = input.value.trim();
+            
+            if (habitName) {
+                const habitId = Date.now().toString();
+                habits.push({ id: habitId, name: habitName });
+                habitData[habitId] = {};
+                input.value = '';
+                renderHabitTable();
+                updateStats();
+                updateCharts();
+            }
+        }
+
+        function deleteHabit(habitId) {
+            habits = habits.filter(h => h.id !== habitId);
+            delete habitData[habitId];
+            renderHabitTable();
+            updateStats();
+            updateCharts();
+        }
+
+        function getDaysInMonth() {
+            return new Date(currentYear, currentMonth + 1, 0).getDate();
+        }
+
+        function renderHabitTable() {
+            const days = getDaysInMonth();
+            const header = document.getElementById('tableHeader');
+            const body = document.getElementById('habitBody');
+            
+            // Render header
+            header.innerHTML = '<th>Habit Name</th>';
+            for (let i = 1; i <= days; i++) {
+                header.innerHTML += `<th>${i}</th>`;
+            }
+            
+            // Render body
+            if (habits.length === 0) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="${days + 1}">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No habits yet. Add your first habit above!</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            body.innerHTML = '';
+            habits.forEach(habit => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        ${habit.name}
+                        <button class="delete-habit" onclick="deleteHabit('${habit.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                for (let day = 1; day <= days; day++) {
+                    const key = `${currentYear}-${currentMonth}-${day}`;
+                    const isChecked = habitData[habit.id]?.[key] || false;
+                    
+                    const cell = document.createElement('td');
+                    cell.className = 'checkbox-cell';
+                    cell.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} 
+                        onchange="toggleHabit('${habit.id}', ${day})">`;
+                    row.appendChild(cell);
+                }
+                
+                body.appendChild(row);
+            });
+        }
+
+        function toggleHabit(habitId, day) {
+            if (!habitData[habitId]) habitData[habitId] = {};
+            const key = `${currentYear}-${currentMonth}-${day}`;
+            habitData[habitId][key] = !habitData[habitId][key];
+            updateStats();
+            updateCharts();
+        }
+
+        function updateStats() {
+            // Update habit count
+            document.getElementById('habitCount').textContent = habits.length;
+            
+            // Calculate completion rate
+            const days = getDaysInMonth();
+            let totalPossible = habits.length * days;
+            let totalCompleted = 0;
+            
+            habits.forEach(habit => {
+                for (let day = 1; day <= days; day++) {
+                    const key = `${currentYear}-${currentMonth}-${day}`;
+                    if (habitData[habit.id]?.[key]) totalCompleted++;
+                }
+            });
+            
+            const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+            document.getElementById('completion').textContent = completionRate + '%';
+            
+            // Calculate streak (consecutive days with all habits completed)
+            let streak = 0;
+            const today = new Date();
+            
+            if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
+                for (let day = today.getDate(); day >= 1; day--) {
+                    let allCompleted = true;
+                    habits.forEach(habit => {
+                        const key = `${currentYear}-${currentMonth}-${day}`;
+                        if (!habitData[habit.id]?.[key]) allCompleted = false;
+                    });
+                    if (allCompleted && habits.length > 0) streak++;
+                    else break;
+                }
+            }
+            
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function initializeCharts() {
+            // Pie Chart
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['rgb(9, 107, 104)', 'rgb(144, 209, 202)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgb(26, 42, 79)',
+                                font: {
+                                    size: 14,
+                                    weight: 600
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Bar Chart
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Habits Completed',
+                        data: [],
+                        backgroundColor: 'rgb(9, 107, 104)',
+                        borderColor: 'rgb(26, 42, 79)',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: 'rgb(26, 42, 79)',
+                                font: {
+                                    weight: 600
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(26, 42, 79, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgb(26, 42, 79)',
+                                font: {
+                                    weight: 600
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            const days = getDaysInMonth();
+            
+            // Update Pie Chart
+            let totalPossible = habits.length * days;
+            let totalCompleted = 0;
+            
+            habits.forEach(habit => {
+                for (let day = 1; day <= days; day++) {
+                    const key = `${currentYear}-${currentMonth}-${day}`;
+                    if (habitData[habit.id]?.[key]) totalCompleted++;
+                }
+            });
+            
+            pieChart.data.datasets[0].data = [totalCompleted, totalPossible - totalCompleted];
+            pieChart.update();
+            
+            // Update Bar Chart
+            const dailyData = [];
+            const labels = [];
+            
+            for (let day = 1; day <= Math.min(days, 15); day++) {
+                let completed = 0;
+                habits.forEach(habit => {
+                    const key = `${currentYear}-${currentMonth}-${day}`;
+                    if (habitData[habit.id]?.[key]) completed++;
+                });
+                dailyData.push(completed);
+                labels.push(`Day ${day}`);
+            }
+            
+            barChart.data.labels = labels;
+            barChart.data.datasets[0].data = dailyData;
+            barChart.update();
+        }
+
+        // Initialize app on load
+        initializeApp();

@@ -22,16 +22,16 @@ main{
 .navbar{
     margin:0;
     padding:0;
-    background-color: rgb(26, 42, 79);
+    background-color: rgb(9, 107, 104);
     border: 2px solid rgb(16, 25, 48);
     height: 100px;
     width: 100% ;
-    color: rgb(255, 242, 239);
+    color: rgb(255, 251, 222);
     position: fixed;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 70px;
+    gap: 40px;
 }
 
 a{
@@ -42,14 +42,14 @@ a{
 .main1{
     min-height: calc(100vh - 100px);
     width: 100%;
-    background-color: rgb(255, 242, 239);
+    background-color: rgb(255, 251, 222);
     display: flex;                 
     align-items: center;           
     gap: 48px;
 }
 
 #get-started-btn{
-    background-color: rgb(26, 42, 79);
+    background-color: rgb(9, 107, 104);
     color: white;
     border: none;
     height: 70px;
@@ -70,7 +70,7 @@ a{
 #id101{
     width: fit-content;
     padding: 10px 24px;
-    background-color: rgb(255, 219, 182);
+    background-color: rgb(144, 209, 202);
     border-radius: 30px;
     font-weight: 600;
     font-size: 14px;
@@ -88,8 +88,7 @@ a{
     background: #ffffff;
     border-radius: 24px;
     padding: 48px 40px;
-    box-shadow: 0 24px 50px rgba(26, 42, 79, 0.12);
-    border: 10px solid rgb(255, 219, 182);
+    box-shadow: 0 24px 50px rgba(26, 42, 79, 0.12), 0 0 15px 5px rgba(144, 209, 202, 0.7);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -121,7 +120,6 @@ a{
 }
 
 .login-box input:focus {
-    border-color: rgb(247, 165, 165);
     background-color: #ffffff;
     box-shadow: 0 0 0 4px rgba(247, 165, 165, 0.15);
 }
@@ -131,7 +129,7 @@ a{
     padding: 16px;
     width: 100%;
     border-radius: 999px;
-    background: rgb(26, 42, 79);
+    background: rgb(9, 107, 104);
     color: white;
     border: none;
     font-size: 17px;
@@ -175,8 +173,16 @@ a{
     gap: 20px;  
 }
 
+.step-card {
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 20px;
+    background-color: rgb(144, 209, 202);
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
+}
+
 .main3{
-    background-color:rgb(255, 242, 239); 
+    background-color:rgb(255, 251, 222); 
     height: 70vh;
     width: 100%;
     display: flex;
@@ -188,7 +194,7 @@ a{
 }
 
 .foot{
-    background-color: rgb(26, 42, 79); 
+    background-color: rgb(9, 107, 104); 
     height: 80px;
     width: 100%;
     color: white;
@@ -224,7 +230,7 @@ a{
 /* Compact Assessment Page */
 .assessment-page {
     min-height: calc(100vh - 100px);
-    background-color: rgb(255, 242, 239);
+    background-color: rgb(255, 251, 222);
     padding: 140px 20px 40px;
     display: flex;
     flex-direction: column;
@@ -238,7 +244,7 @@ a{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: rgb(26, 42, 79);
+    color: rgb(9, 107, 104);
     margin-bottom: 12px;
 }
 
@@ -263,7 +269,6 @@ a{
 .progress-fill {
     width: 15%;
     height: 100%;
-    background-color: #ffb36b;
     border-radius: 10px;
     transition: width 0.3s ease;
 }
@@ -276,13 +281,11 @@ a{
     width: 100%;
     padding: 32px;
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-    border: 8px solid rgb(255, 219, 182);
+    box-shadow: 0 24px 50px rgba(26, 42, 79, 0.12), 0 0 15px 5px rgba(144, 209, 202, 0.7);
 }
 
 .question-tag {
     display: inline-block;
-    background: #ffe2c5;
     color: #000000;
     padding: 6px 16px;
     border-radius: 16px;
@@ -294,7 +297,7 @@ a{
 
 .question-card h2 {
     font-size: 24px;
-    color: rgb(26, 42, 79);
+    color: rgb(0, 0, 0);
     margin-bottom: 20px;
     line-height: 1.3;
 }
@@ -318,20 +321,20 @@ a{
 }
 
 .option-card input[type="checkbox"] {
-    accent-color: rgb(247, 165, 165);
+    accent-color: rgb(144, 209, 202);
     width: 20px;
     height: 20px;
     cursor: pointer;
 }
 
 .option-card:hover {
-    border-color: rgb(247, 165, 165);
+    border-color: rgb(144, 209, 202);
     background-color: #fff7f2;
 }
 
 .option-card input:checked + span {
     font-weight: 600;
-    color: rgb(26, 42, 79);
+    color: rgb(9, 107, 104);
 }
 
 /* Button Container */
@@ -345,8 +348,8 @@ a{
 
 /* Back Button */
 .back-btn {
-    background: rgb(255, 219, 182);
-    color: rgb(26, 42, 79);
+    background: rgb(144, 209, 202);
+    color: rgb(9, 107, 104);
     border: none;
     padding: 12px 24px;
     border-radius: 30px;
@@ -366,7 +369,7 @@ a{
 
 /* Next Button */
 .next-btn {
-    background: rgb(26, 42, 79);
+    background: rgb(9, 107, 104);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -390,7 +393,7 @@ a{
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgb(255, 242, 239);
+    background-color: rgb(255, 251, 222);
     padding: 60px 20px;
 }
 
@@ -399,8 +402,8 @@ a{
     background: #ffffff;
     border-radius: 24px;
     padding: 48px 42px;
-    box-shadow: 0 28px 60px rgba(26, 42, 79, 0.14);
-    border: 5px solid rgb(255, 219, 182);
+     box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
+    
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -409,7 +412,7 @@ a{
 .auth-card h2 {
     font-size: 30px;
     font-weight: 700;
-    color: rgb(26, 42, 79);
+    color: rgb(9, 107, 104);
     margin-bottom: 12px;
     text-align: center;
 }
@@ -440,7 +443,7 @@ a{
 }
 
 .auth-form input:focus {
-    border-color: rgb(247, 165, 165);
+    border-color: rgb(144, 209, 202);
     background-color: #ffffff;
     box-shadow: 0 0 0 4px rgba(247, 165, 165, 0.15);
 }
@@ -449,7 +452,7 @@ a{
     margin-top: 12px;
     padding: 16px;
     border-radius: 999px;
-    background: rgb(26, 42, 79);
+    background: rgb(9, 107, 104);
     color: white;
     border: none;
     font-size: 17px;
@@ -465,7 +468,7 @@ a{
 }
 
 .auth-form button:hover {
-    background: rgb(20, 34, 65);
+    background: rgb(9, 107, 104);
     transform: translateY(-1px);
 }
 
@@ -476,17 +479,17 @@ a{
 }
 
 .auth-footer-text a {
-    color: rgb(247, 165, 165);
+    color: rgb(144, 209, 202);
     text-decoration: none;
     font-weight: 600;
     margin-left: 6px;
 }
 
 .dashboard {
-    background: rgb(255, 242, 239);
+    background: rgb(255, 251, 222);
     padding: 40px;
     font-family: "Segoe UI", sans-serif;
-    color: rgb(26, 42, 79);
+    color: rgb(9, 107, 104);
 }
 
 .dashboard-header {
@@ -499,7 +502,6 @@ a{
 
 .settings-btn {
     background: white;
-    border: 1px solid rgb(247, 165, 165);
     padding: 10px 18px;
     border-radius: 12px;
     cursor: pointer;
@@ -510,6 +512,8 @@ a{
     border-radius: 20px;
     padding: 25px;
     margin-bottom: 40px;
+    border: 4px solid transparent;
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
 }
 
 .profile-info {
@@ -524,8 +528,8 @@ a{
 }
 
 .badge {
-    background: rgb(247, 165, 165);
-    color: rgb(26, 42, 79);
+    background: rgb(255, 251, 222);
+    color: rgb(9, 107, 104);
     padding: 5px 12px;
     border-radius: 12px;
     font-size: 12px;
@@ -535,12 +539,14 @@ a{
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 24px;
     margin-top: 30px;
+    color: #000000;
     
 }
 
 .profile-stats > div {
-    background: rgb(255, 242, 239);
-    border: 1px solid rgba(26, 42, 79, 0.08);
+    background: rgb(255, 251, 222);
+    border: 1px solid transparent;
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
     border-radius: 18px;
     padding: 24px 20px;
     text-align: center;;
@@ -549,22 +555,24 @@ a{
 .profile-stats h3 {
     font-size: 20px;
     font-weight: 700;
-    color: rgb(26, 42, 79);
+    color: rgb(0, 0, 0);
     margin-bottom: 6px;
 }
 
 .profile-stats p {
     font-size: 14px;
-    color: rgba(26, 42, 79, 0.7);
+    color: rgba(0, 0, 0, 0.7);
     letter-spacing: 0.4px;
 }
 
 .ai-section {
-    background: rgb(26, 42, 79);
+    background: rgb(9, 107, 104);
     color: white;
     border-radius: 20px;
     padding: 30px;
     margin-bottom: 40px;
+    border: 4px solid transparent;
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
 }
 
 .subtitle {
@@ -583,6 +591,8 @@ a{
     padding: 20px;
     border-radius: 16px;
     text-align: center;
+    border: 4px solid transparent;
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
 }
 
 .ai-insight {
@@ -601,6 +611,8 @@ a{
     background: white;
     padding: 25px;
     border-radius: 20px;
+    border: 4px solid transparent;
+    box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7);
 }
 
 .progress {
@@ -615,7 +627,7 @@ a{
 
 .bar div {
     height: 100%;
-    background: rgb(247, 165, 165);
+    background: rgb(18, 153, 144);
     border-radius: 10px;
 }
 
@@ -623,6 +635,7 @@ a{
     display: flex;
     justify-content: space-between;
     margin: 8px 0;
+    color: #000000;
 }
 
 .tag {
@@ -632,16 +645,318 @@ a{
 }
 
 .tag.high {
-    background: rgb(247, 165, 165);
+    background: rgb(255, 251, 222);
 }
 
 .tag.mid {
-    background: rgb(255, 219, 182);
+    background: rgb(144, 209, 202);
 }
 
 .player {
     margin-top: 20px;
-    background: rgb(255, 242, 239);
+    background: rgb(255, 251, 222);
     padding: 15px;
     border-radius: 12px;
 }
+
+.tracker {
+    background: rgb(255, 251, 222);
+    padding: 40px;
+    font-family: "Segoe UI", sans-serif;
+    color: rgb(9, 107, 104);
+}
+
+        /* Header */
+.header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7), 0 20px 40px rgba(26, 42, 79, 0.08);
+            border: 6px solid transparent;
+        }
+
+.header h1 {
+            color: rgb(9, 107, 104);
+            font-size: 36px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+.month-control {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+.month-control button {
+            background: rgb(9, 107, 104);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+.month-control button:hover {
+            background: rgb(9, 107, 104);
+            transform: translateY(-1px);
+        }
+
+#monthLabel {
+            font-size: 24px;
+            font-weight: 700;
+            color: black;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        /* Add Habit Section */
+.add-habit-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7), 0 20px 40px rgba(26, 42, 79, 0.08);
+            border: 4px solid transparent;
+        }
+
+.add-habit-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+.add-habit-form input {
+            flex: 1;
+            padding: 16px 18px;
+            border: 1.6px solid #e5e7eb;
+            background-color: #fafafa;
+            border-radius: 14px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+.add-habit-form input:focus {
+            border-color: rgb(247, 165, 165);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(247, 165, 165, 0.15);
+        }
+
+.add-habit-form button {
+            background: rgb(9, 107, 104);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+.add-habit-form button:hover {
+            background: rgb(9, 107, 104);
+            transform: translateY(-1px);
+        }
+
+        /* Stats */
+.stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+.stat-card {
+            background: rgb(18, 153, 144);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7), 0 20px 40px rgba(26, 42, 79, 0.08);
+            border: 4px solid transparent;
+            text-align: center;
+        }
+
+.stat-card .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: rgb(255, 255, 255);
+        }
+
+.stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: rgb(0, 0, 0);
+            margin-bottom: 5px;
+        }
+
+.stat-card .label {
+            color: rgb(255, 255, 255);
+            font-size: 20px;
+            
+        }
+
+        /* Habit Grid */
+.habit-grid-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7), 0 20px 40px rgba(26, 42, 79, 0.08);
+            border: 6px solid transparent;
+            overflow-x: auto;
+        }
+
+        .habit-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .habit-table th {
+            background: rgb(9, 107, 104);
+            color: white;
+            padding: 15px 10px;
+            font-weight: 600;
+            top: 0;
+            z-index: 10;
+        }
+
+        .habit-table th:first-child {
+            border-radius: 12px 0 0 0;
+            min-width: 200px;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .habit-table th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        .habit-table td {
+            padding: 15px 10px;
+            border-bottom: 1px solid rgba(26, 42, 79, 0.1);
+            text-align: center;
+        }
+
+        .habit-table td:first-child {
+            text-align: left;
+            padding-left: 20px;
+            font-weight: 600;
+            color: rgb(9, 107, 104);
+            position: relative;
+        }
+
+        .delete-habit {
+            background: rgb(255, 251, 222);
+            color: red;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: all 0.25s ease;
+            font-weight: 600;
+        }
+
+        .delete-habit:hover {
+            background: rgb(144, 209, 202);
+        }
+
+        .checkbox-cell {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-cell:hover {
+            background: rgb(255, 251, 222);
+        }
+
+        .checkbox-cell input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: rgb(144, 209, 202);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 15px 5px rgba(144, 209, 202, 0.7), 0 20px 40px rgba(26, 42, 79, 0.08);
+            border: 4px solid transparent;
+        }
+
+        .chart-container h2 {
+            color: rgb(9, 107, 104);
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .month-control {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .add-habit-form {
+                flex-direction: column;
+            }
+
+            .add-habit-form button {
+                width: 100%;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card .value {
+                font-size: 24px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgb(9, 107, 104);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: rgb(144, 209, 202);
+        }
