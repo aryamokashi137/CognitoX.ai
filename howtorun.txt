@@ -1,65 +1,59 @@
 ===================================================
-CognitoX.ai - Backend Setup and Run Instructions
+CognitoX.ai - Setup and Run Instructions
 ===================================================
 
-This is the Flask backend for CognitoX.ai, which predicts personalized 
-learning ability and strategy based on questionnaire data using a Machine Learning model.
+This project consists of two parts:
+1. The Backend (Flask + SQLite Server)
+2. The Frontend (HTML/JS/CSS Browser interface)
 
-Prerequisites:
---------------
-- Python 3.8 to 3.12 installed on your system.
-- pip (Python package installer).
+Both need to be running for the full experience.
 
-Setup Instructions:
--------------------
-1. Open a terminal or command prompt.
-2. Navigate to the Backend folder:
-   cd path\to\CognitoX.ai\Backend
+---------------------------------------------------
+HOW TO RUN THE BACKEND SERVER
+---------------------------------------------------
+1. Open a terminal (Command Prompt or PowerShell) and navigate to the project folder:
+   cd path\to\CognitoX.ai
 
-3. (Optional but Recommended) Create a Python virtual environment:
+2. Create a virtual environment (Optional but Recommended):
    python -m venv venv
    
-   Activate the virtual environment:
-   - On Windows:
-     venv\Scripts\activate
-   - On Mac/Linux:
-     source venv/bin/activate
+   Activate it:
+   - On Windows: venv\Scripts\activate
+   - On Mac/Linux: source venv/bin/activate
 
-4. Install the required dependencies:
+3. Install the required dependencies:
    pip install -r requirements.txt
 
-How to Add Your ML Model (.pkl):
---------------------------------
-1. Place your trained `.pkl` file inside the `Backend\models` folder.
-   Name it `learning_ability_model.pkl` (or update `app.py` with the new name).
-2. The folder structure should look like this:
-   Backend\
-     models\
-       learning_ability_model.pkl
-3. If no file is present, a dummy model is automatically used for testing and development.
-   The backend will print a warning in the console when started.
+4. Start the Flask server:
+   python Backend\app.py
 
-Running the Server:
--------------------
-1. Start the Flask server:
-   python app.py
+5. Success! The server will now be running at:
+   http://127.0.0.1:5000
 
-2. The server will run at http://127.0.0.1:5000
 
-Testing the Endpoints:
-----------------------
-1. Health Check (GET):
-   Open a browser or use Postman/curl and go to:
-   http://127.0.0.1:5000/api/health
+---------------------------------------------------
+HOW TO RUN THE FRONTEND APP
+---------------------------------------------------
+Method 1 (Easiest):
+1. Simply go to your `Frontend` folder.
+2. Double-click the `index.html` file.
+3. It will open in your default browser (Chrome, Edge, etc.) and you can interact with it!
 
-2. Predict (POST):
-   Send a POST request to: 
-   http://127.0.0.1:5000/api/predict
-   
-   JSON Body Example:
-   {
-       "features": [1.5, 0.2, 3.4, 1.1] 
-   }
+Method 2 (Using a Python Local Server):
+1. Open a *NEW* terminal window.
+2. Navigate to the project folder:
+   cd path\to\CognitoX.ai
+3. Run this command to serve the frontend:
+   python -m http.server 8000
+4. Open your browser and go to:
+   http://localhost:8000/Frontend/index.html
+
+---------------------------------------------------
+Adding your Machine Learning Model:
+---------------------------------------------------
+1. Place your trained `.pkl` file inside the `Backend\models\` folder.
+2. Name it `learning_ability_model.pkl`.
+3. If no file is present, a dummy model is automatically used for testing.
 
 CI/CD Pipeline:
 ---------------
