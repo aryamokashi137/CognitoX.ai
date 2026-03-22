@@ -1,0 +1,70 @@
+===================================================
+CognitoX.ai - Backend Setup and Run Instructions
+===================================================
+
+This is the Flask backend for CognitoX.ai, which predicts personalized 
+learning ability and strategy based on questionnaire data using a Machine Learning model.
+
+Prerequisites:
+--------------
+- Python 3.8 to 3.12 installed on your system.
+- pip (Python package installer).
+
+Setup Instructions:
+-------------------
+1. Open a terminal or command prompt.
+2. Navigate to the Backend folder:
+   cd path\to\CognitoX.ai\Backend
+
+3. (Optional but Recommended) Create a Python virtual environment:
+   python -m venv venv
+   
+   Activate the virtual environment:
+   - On Windows:
+     venv\Scripts\activate
+   - On Mac/Linux:
+     source venv/bin/activate
+
+4. Install the required dependencies:
+   pip install -r requirements.txt
+
+How to Add Your ML Model (.pkl):
+--------------------------------
+1. Place your trained `.pkl` file inside the `Backend\models` folder.
+   Name it `learning_ability_model.pkl` (or update `app.py` with the new name).
+2. The folder structure should look like this:
+   Backend\
+     models\
+       learning_ability_model.pkl
+3. If no file is present, a dummy model is automatically used for testing and development.
+   The backend will print a warning in the console when started.
+
+Running the Server:
+-------------------
+1. Start the Flask server:
+   python app.py
+
+2. The server will run at http://127.0.0.1:5000
+
+Testing the Endpoints:
+----------------------
+1. Health Check (GET):
+   Open a browser or use Postman/curl and go to:
+   http://127.0.0.1:5000/api/health
+
+2. Predict (POST):
+   Send a POST request to: 
+   http://127.0.0.1:5000/api/predict
+   
+   JSON Body Example:
+   {
+       "features": [1.5, 0.2, 3.4, 1.1] 
+   }
+
+CI/CD Pipeline:
+---------------
+This project includes a GitHub Actions workflow in `.github/workflows/ci-cd.yml`.
+When you push code to the `main` or `master` branch, it will automatically:
+- Setup a Python environment.
+- Install the dependencies from `requirements.txt`.
+- Run tests located in `Backend/tests/test_app.py`.

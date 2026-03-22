@@ -235,9 +235,11 @@ function finishAssessment() {
 }
 
 // Load first question
-window.onload = function () {
-    loadQuestion();
-};
+if (document.querySelector('.question-card')) {
+    window.addEventListener('load', function () {
+        loadQuestion();
+    });
+}
 
 //--------signup page--------
 
@@ -596,4 +598,59 @@ let currentMonth = 0;
         }
 
         // Initialize app on load
-        initializeApp();
+        if (document.getElementById('monthLabel')) {
+            initializeApp();
+        }
+
+// ---------dashboard page----------
+document.addEventListener("DOMContentLoaded", function () {
+    const settingsBtn = document.querySelector(".settings-btn");
+    const popup = document.getElementById("settings-popup");
+    const closeBtn = document.querySelector(".close-btn");
+    const profilePicUpload = document.getElementById("profile-pic-upload");
+    const popupProfilePic = document.getElementById("popup-profile-pic");
+    const settingsForm = document.getElementById("settings-form");
+
+    if (settingsBtn) {
+        settingsBtn.addEventListener("click", () => {
+            popup.style.display = "flex";
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            popup.style.display = "none";
+        });
+    }
+
+    window.addEventListener("click", (e) => {
+        if (e.target == popup) {
+            popup.style.display = "none";
+        }
+    });
+
+    if (profilePicUpload) {
+        profilePicUpload.addEventListener("change", function () {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                popupProfilePic.src = e.target.result;
+            }
+            reader.readAsDataURL(this.files[0]);
+        });
+    }
+
+    if (settingsForm) {
+        settingsForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+
+            // Update profile card
+            document.querySelector(".profile-info h2").textContent = name;
+            
+            // You can also update the email if you have a place to display it.
+            
+            popup.style.display = "none";
+        });
+    }
+});
