@@ -744,4 +744,26 @@ document.addEventListener("DOMContentLoaded", function () {
             popup.style.display = "none";
         });
     }
+
+    // Dynamic AI prediction loading
+    const predictionData = localStorage.getItem("latestPrediction");
+    if (predictionData) {
+        try {
+            const data = JSON.parse(predictionData);
+            if (data && data.learning_ability) {
+                const styleElem = document.getElementById("display-learning-style");
+                if (styleElem) styleElem.textContent = data.learning_ability;
+                
+                const insightAbilityElem = document.getElementById("display-insight-ability");
+                if (insightAbilityElem) insightAbilityElem.textContent = data.learning_ability;
+                
+                const insightStrategyElem = document.getElementById("display-insight-strategy");
+                if (insightStrategyElem && data.recommended_strategy) {
+                    insightStrategyElem.textContent = "Recommended Strategy: " + data.recommended_strategy;
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing AI prediction data", e);
+        }
+    }
 });
