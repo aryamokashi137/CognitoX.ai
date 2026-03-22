@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const loginForm = document.querySelector(".login-box form");
 
     if (loginForm) {
-        loginForm.addEventListener("submit", function (event) {
+        loginForm.addEventListener("submit", async function (event) {
             event.preventDefault(); // stop page refresh
 
             const username = loginForm.querySelector("input[type='text']").value;
@@ -31,8 +31,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Temporary success message (backend later)
-            alert("Login successful (demo).");
+            try {
+                const response = await fetch("http://127.0.0.1:5000/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert("Login successful!");
+                    // Save JWT token
+                    localStorage.setItem("authToken", data.token);
+                    localStorage.setItem("username", data.username);
+                    window.location.href = "dashboard.html";
+                } else {
+                    alert("Login failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error logging in:", error);
+                alert("Could not connect to the backend server. Is it running?");
+            }
 
             // Clear fields
             loginForm.reset();
@@ -123,6 +143,46 @@ document.addEventListener("DOMContentLoaded", function () {
                     "Managing time",
                     "Understanding complex topics",
                     "Remembering information"
+                ]
+            },
+            {
+                tag: "Stress Response",
+                question: "How do you usually handle academic or study-related stress?",
+                options: [
+                    "Take breaks and practice relaxation",
+                    "Push through and work harder",
+                    "Procrastinate and avoid the work",
+                    "Seek help from peers or mentors"
+                ]
+            },
+            {
+                tag: "Retrieval Practice",
+                question: "When preparing for an exam, how do you review your material?",
+                options: [
+                    "Cramming the night before",
+                    "Spaced repetition over several days",
+                    "Last-minute skimming of notes",
+                    "Discussing the topics with others"
+                ]
+            },
+            {
+                tag: "Information Processing",
+                question: "How do you best process complex new information?",
+                options: [
+                    "Breaking it down into chunks",
+                    "Looking at the big picture first",
+                    "Creating analogies",
+                    "Repeatedly reading it"
+                ]
+            },
+            {
+                tag: "Technology Usage",
+                question: "How heavily do you rely on technology while studying?",
+                options: [
+                    "Minimal (Textbooks/Handwritten notes)",
+                    "Moderate (Research/Organizing)",
+                    "Heavy (AI solvers/Digital summaries)",
+                    "Complete dependency"
                 ]
             }
         ];
@@ -228,10 +288,40 @@ function handleBack() {
 }
 
 // Finish assessment
-function finishAssessment() {
+async function finishAssessment() {
     localStorage.setItem('assessmentAnswers', JSON.stringify(answers));
-    alert('Assessment completed! Redirecting to dashboard...');
-    window.location.href = 'dashboard.html';
+    
+    // Extract the exact index numbers (0, 1, 2, or 3) selected for the 12 questions
+    const features = answers.map((ans, idx) => {
+        return questions[idx].options.indexOf(ans.answer);
+    });
+
+    const token = localStorage.getItem("authToken");
+    
+    try {
+        const response = await fetch("http://127.0.0.1:5000/api/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` })
+            },
+            body: JSON.stringify({ features })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Assessment completed! Redirecting to dashboard...');
+            // Save the prediction to local storage so the dashboard can display it immediately
+            localStorage.setItem("latestPrediction", JSON.stringify(data));
+            window.location.href = 'dashboard.html';
+        } else {
+            alert('Prediction Failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error("Error predicting:", error);
+        alert("Could not connect to the backend server. Make sure it is running.");
+    }
 }
 
 // Load first question
@@ -246,56 +336,57 @@ if (document.querySelector('.question-card')) {
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".auth-form");
 
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-        const inputs = form.querySelectorAll("input");
+            const inputs = form.querySelectorAll("input");
 
-        const fullName = inputs[0].value.trim();
-        const username = inputs[1].value.trim();
-        const password = inputs[2].value;
-        const confirmPassword = inputs[3].value;
+            const fullName = inputs[0].value.trim();
+            const username = inputs[1].value.trim();
+            const password = inputs[2].value;
+            const confirmPassword = inputs[3].value;
+            
+            // Assume the first available email field, or create a dummy email if none exists on signup UI yet
+            const email = username + "@cognitox.ai"; // Placeholder if form doesn't have an email field
 
-        // Basic validation
-        if (!fullName || !username || !password || !confirmPassword) {
-            alert("Please fill in all fields");
-            return;
-        }
+            // Basic validation
+            if (!fullName || !username || !password || !confirmPassword) {
+                alert("Please fill in all fields");
+                return;
+            }
 
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters long");
-            return;
-        }
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters long");
+                return;
+            }
 
-        if (password !== confirmPassword) {
-            alert("Passwords do not match");
-            return;
-        }
+            if (password !== confirmPassword) {
+                alert("Passwords do not match");
+                return;
+            }
 
-        // Check if user already exists
-        const users = JSON.parse(localStorage.getItem("users")) || [];
+            try {
+                const response = await fetch("http://127.0.0.1:5000/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password })
+                });
 
-        const userExists = users.some(user => user.username === username);
-        if (userExists) {
-            alert("Username already exists. Please choose another.");
-            return;
-        }
+                const data = await response.json();
 
-        // Save user
-        const newUser = {
-            fullName,
-            username,
-            password // NOTE: Do NOT store plaintext passwords in real apps
-        };
-
-        users.push(newUser);
-        localStorage.setItem("users", JSON.stringify(users));
-
-        alert("Account created successfully! Redirecting to login...");
-
-        // Redirect to login page
-        window.location.href = "login.html";
-    });
+                if (response.ok) {
+                    alert("Account created successfully! Redirecting to login...");
+                    window.location.href = "login.html";
+                } else {
+                    alert("Registration failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error registering:", error);
+                alert("Could not connect to the backend server.");
+            }
+        });
+    }
 });
 
 
