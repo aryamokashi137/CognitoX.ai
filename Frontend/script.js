@@ -1,6 +1,43 @@
+// ---------Route Protection----------
+(function enforceAuth() {
+    const protectedPages = ['dashboard.html', 'questionaire.html', 'tracker.html'];
+    const currentPath = window.location.pathname;
+    const isProtected = protectedPages.some(page => currentPath.includes(page));
+    
+    if (isProtected && !localStorage.getItem('authToken')) {
+        alert("You must be logged in to access this page!");
+        window.location.href = "index.html";
+    }
+
+    // Dynamic Navbar initialization
+    updateNavbar();
+})();
+
+function updateNavbar() {
+    const authContainer = document.getElementById("nav-auth-container");
+    const token = localStorage.getItem("authToken");
+    const username = localStorage.getItem("username") || "User";
+
+    if (authContainer && token) {
+        // Clear children
+        authContainer.innerHTML = `
+            <div class="user-profile-chip">
+                <img src="https://ui-avatars.com/api/?name=${username}&background=ffdca8&color=096b68" alt="user">
+                <span>${username}</span>
+            </div>
+            <a href="#" id="sign-out-btn" class="sign-out-btn"><i class="fa-solid fa-power-off"></i> SignOut</a>
+        `;
+
+        document.getElementById("sign-out-btn").addEventListener("click", (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            alert("Signed out successfully!");
+            window.location.href = "index.html";
+        });
+    }
+}
 
 // ---------index page----------
-
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -47,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     localStorage.setItem("username", data.username);
                     window.location.href = "dashboard.html";
                 } else {
-                    alert("Login failed: " + data.error);
+                    alert("Login failed: " + data.error + "\n\n(Have you created an account yet? Click Sign Up!)");
                 }
             } catch (error) {
                 console.error("Error logging in:", error);
@@ -377,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (response.ok) {
                     alert("Account created successfully! Redirecting to login...");
-                    window.location.href = "login.html";
+                    window.location.href = "index.html";
                 } else {
                     alert("Registration failed: " + data.error);
                 }
@@ -392,29 +429,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
 //--------tracker page--------
 
-let currentMonth = 0;
-        let currentYear = 2026;
-        let habits = [{ id: 'dummy', name: 'Read for 30 minutes' }];
-        let habitData = {
-            dummy: {
-                '2026-0-1': true,
-                '2026-0-2': true,
-                '2026-0-4': true,
-                '2026-0-5': false,
-                '2026-0-6': true,
-                '2026-0-8': true,
-            }
-        };
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let habits = [];
+        let habitData = {};
         let pieChart, barChart;
+
+        async function fetchHabits() {
+            const token = localStorage.getItem('authToken');
+            if(!token) return;
+            try {
+                const res = await fetch("http://localhost:5000/api/habits", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    habits = data.habits || [];
+                    habitData = data.logs || {};
+                    renderHabitTable();
+                    updateStats();
+                    updateCharts();
+                }
+            } catch (e) {
+                console.error("Error fetching habits", e);
+            }
+        }
 
         const monthNames = ["January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"];
 
         function initializeApp() {
             updateMonthLabel();
-            renderHabitTable();
-            updateStats();
             initializeCharts();
+            fetchHabits();
             
             document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
             document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
@@ -443,27 +490,43 @@ let currentMonth = 0;
             document.getElementById('monthLabel').textContent = `${monthNames[currentMonth]} ${currentYear}`;
         }
 
-        function addHabit() {
+        async function addHabit() {
             const input = document.getElementById('habitInput');
             const habitName = input.value.trim();
+            const token = localStorage.getItem('authToken');
             
-            if (habitName) {
-                const habitId = Date.now().toString();
-                habits.push({ id: habitId, name: habitName });
-                habitData[habitId] = {};
-                input.value = '';
+            if (habitName && token) {
+                const res = await fetch("http://localhost:5000/api/habits", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ name: habitName })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    habits.push({ id: data.id, name: data.name });
+                    habitData[data.id] = {};
+                    input.value = '';
+                    renderHabitTable();
+                    updateStats();
+                    updateCharts();
+                }
+            }
+        }
+
+        async function deleteHabit(habitId) {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+            const res = await fetch(`http://localhost:5000/api/habits?id=${habitId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                habits = habits.filter(h => String(h.id) !== String(habitId));
+                delete habitData[habitId];
                 renderHabitTable();
                 updateStats();
                 updateCharts();
             }
-        }
-
-        function deleteHabit(habitId) {
-            habits = habits.filter(h => h.id !== habitId);
-            delete habitData[habitId];
-            renderHabitTable();
-            updateStats();
-            updateCharts();
         }
 
         function getDaysInMonth() {
@@ -523,12 +586,21 @@ let currentMonth = 0;
             });
         }
 
-        function toggleHabit(habitId, day) {
+        async function toggleHabit(habitId, day) {
             if (!habitData[habitId]) habitData[habitId] = {};
             const key = `${currentYear}-${currentMonth}-${day}`;
             habitData[habitId][key] = !habitData[habitId][key];
             updateStats();
             updateCharts();
+            
+            const token = localStorage.getItem('authToken');
+            if(token) {
+                fetch("http://localhost:5000/api/habits/log", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ habit_id: habitId, date_str: key })
+                });
+            }
         }
 
         function updateStats() {
@@ -673,14 +745,14 @@ let currentMonth = 0;
             const dailyData = [];
             const labels = [];
             
-            for (let day = 1; day <= Math.min(days, 15); day++) {
+            for (let day = 1; day <= days; day++) {
                 let completed = 0;
                 habits.forEach(habit => {
                     const key = `${currentYear}-${currentMonth}-${day}`;
                     if (habitData[habit.id]?.[key]) completed++;
                 });
                 dailyData.push(completed);
-                labels.push(`Day ${day}`);
+                labels.push(`${day}`);
             }
             
             barChart.data.labels = labels;
@@ -745,25 +817,220 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Dynamic AI prediction loading
-    const predictionData = localStorage.getItem("latestPrediction");
-    if (predictionData) {
+    // Dynamic AI prediction loading directly from backend API
+    async function fetchDashboardData() {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
         try {
-            const data = JSON.parse(predictionData);
-            if (data && data.learning_ability) {
+            const res = await fetch("http://localhost:5000/api/dashboard", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            
+            const aiSection = document.querySelector(".ai-section");
+            const profilesSection = document.querySelector(".profiles");
+            const profileStats = document.querySelector(".profile-stats");
+            
+            const usernameElem = document.querySelector(".profile-info h2");
+            const savedUsername = localStorage.getItem("username");
+            if (usernameElem && savedUsername) usernameElem.textContent = savedUsername;
+
+            if (data.history && data.history.length > 0) {
+                const latest = data.history[0]; // first item is newest
                 const styleElem = document.getElementById("display-learning-style");
-                if (styleElem) styleElem.textContent = data.learning_ability;
+                if (styleElem) styleElem.textContent = latest.learning_ability;
                 
                 const insightAbilityElem = document.getElementById("display-insight-ability");
-                if (insightAbilityElem) insightAbilityElem.textContent = data.learning_ability;
+                if (insightAbilityElem) insightAbilityElem.textContent = latest.learning_ability;
                 
                 const insightStrategyElem = document.getElementById("display-insight-strategy");
-                if (insightStrategyElem && data.recommended_strategy) {
-                    insightStrategyElem.textContent = "Recommended Strategy: " + data.recommended_strategy;
+                if (insightStrategyElem) {
+                    insightStrategyElem.textContent = "Recommended Strategy: " + latest.strategy;
+                }
+                
+                // Calculate and display procrastination risk based on features
+                if (latest.features) {
+                    const risk = calculateProcrastinationRisk(latest.features);
+                    const riskElem = document.getElementById("display-procrastination");
+                    if (riskElem) riskElem.textContent = risk;
+
+                    // Fully render dynamic profile factors
+                    renderDynamicProfile(latest.features, latest.strategy);
+                }
+
+                if (aiSection) aiSection.style.display = 'block';
+                if (profilesSection) profilesSection.style.display = 'flex';
+                
+            } else {
+                // If the user has never taken a test, hide the static data and show a prompt
+                if (aiSection) aiSection.style.display = 'none';
+                if (profilesSection) profilesSection.style.display = 'none';
+                if (profileStats) {
+                    profileStats.innerHTML = `<h1 style="color:black; width: 100%; text-align: center; margin: 50px 0;">No Learning Profile Data. <br><br> Please take the <a href="questionaire.html" style="color:rgb(9, 107, 104); text-decoration: underline;">Questionnaire</a>!</h1>`;
                 }
             }
         } catch (e) {
-            console.error("Error parsing AI prediction data", e);
+            console.error("Error fetching dashboard data", e);
         }
+    }
+
+    function calculateProcrastinationRisk(features) {
+        let score = 0;
+        if (features[0] == 0) score += 2; 
+        if (features[7] == 1 || features[7] == 2) score += 3; 
+        if (features[8] == 2) score += 4; 
+        if (features[9] == 0) score += 2; 
+        
+        if (score >= 7) return "High"; // Removed 🔥 star/emoji as requested
+        if (score >= 4) return "Moderate"; 
+        return "Low";
+    }
+
+    function renderDynamicProfile(features, strategy) {
+        // 1. Learning Modality calculation
+        const styleIdx = features[1]; // Index of "How do you prefer to learn?"
+        let v = 30, r = 30, k = 30; // base levels
+        if (styleIdx == 0) v = 85, r = 35, k = 20; // Visual
+        if (styleIdx == 1) r = 85, v = 35, k = 20; // Reading
+        if (styleIdx == 2) k = 85, v = 35, r = 35; // Kinesthetic
+
+        updateModalityBar("1", "Visual", v);
+        updateModalityBar("2", "Reading", r);
+        updateModalityBar("3", "Kinesthetic", k);
+
+        // 2. Personality Profile (derived from features)
+        // Feature 6: Motivation, Feature 8: Stress, Feature 11: Info Processing
+        const openness = (features[11] == 1) ? "High" : "Moderate"; // Big Picture -> High Openness
+        const conscientiousness = (features[9] == 1) ? "High" : "Moderate"; // Spaced Repetition -> High
+        const extraversion = (features[2] == 1) ? "High" : "Moderate"; // Music/Background -> Higher
+        const agreeableness = (features[3] == 2) ? "High" : "Moderate"; // Longer focus -> higher patience/agreeableness
+        const neuroticism = (features[8] == 2) ? "High" : "Moderate"; // Procrastinate on stress -> higher
+
+        updateTraitTag("1", openness);
+        updateTraitTag("2", conscientiousness);
+        updateTraitTag("3", extraversion);
+        updateTraitTag("4", agreeableness);
+        updateTraitTag("5", neuroticism);
+
+        // 3. Player Type
+        const playerTypeElem = document.getElementById("display-player-type");
+        const playerDescElem = document.getElementById("display-player-desc");
+        
+        if (features[11] == 1) {
+            playerTypeElem.textContent = "Architect";
+            playerDescElem.textContent = "You see the big picture and build complex mental frameworks.";
+        } else if (features[5] == 1) {
+            playerTypeElem.textContent = "Perfectionist";
+            playerDescElem.textContent = "You value detail, spaced repetition, and absolute clarity.";
+        } else {
+            playerTypeElem.textContent = "Explorer";
+            playerDescElem.textContent = "Curious, discovery-driven learner who loves new challenges.";
+        }
+
+        // 4. Productivity Analytics (Radar Chart)
+        renderProductivityChart(features);
+
+        // Update focus/stress score tags
+        const focusScore = (features[3] * 25) + 10; // Simple scalar for demo
+        const stressScore = (features[8] == 0) ? 90 : (features[8] == 1 ? 50 : 20);
+        
+        document.getElementById("label-focus-score").textContent = focusScore + "%";
+        document.getElementById("label-stress-score").textContent = stressScore + "%";
+
+        // 5. Study Recommendations
+        const recContainer = document.getElementById("dynamic-recommendations");
+        if (recContainer) {
+            const list = getRecommendationsFor(strategy, features[1]);
+            recContainer.innerHTML = list.map(item => `
+                <div class="method-card">
+                    <i class="fa-solid ${item.icon}"></i>
+                    <h4>${item.title}</h4>
+                    <p>${item.desc}</p>
+                </div>
+            `).join('');
+        }
+    }
+
+    let dynamicRadarChart = null;
+    function renderProductivityChart(features) {
+        const ctx = document.getElementById('productivityChart');
+        if (!ctx) return;
+
+        // Calculate data points (0-100)
+        // [Focus, Speed, Resilience, Consistency, Big-Picture]
+        const pFocus = (features[3] + 1) * 20 + 10;
+        const pSpeed = (features[4] == 0) ? 90 : (features[4] == 1 ? 60 : 30);
+        const pResilience = (features[8] == 0) ? 85 : 40;
+        const pConsistency = (features[9] == 1) ? 95 : 50;
+        const pBigPicture = (features[10] == 1) ? 90 : 40;
+
+        const data = [pFocus, pSpeed, pResilience, pConsistency, pBigPicture];
+
+        if (dynamicRadarChart) dynamicRadarChart.destroy();
+
+        dynamicRadarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Focus', 'Speed', 'Resilience', 'Consistency', 'Frameworks'],
+                datasets: [{
+                    label: 'Learning Power Index',
+                    data: data,
+                    backgroundColor: 'rgba(18, 153, 144, 0.2)',
+                    borderColor: 'rgb(18, 153, 144)',
+                    pointBackgroundColor: 'rgb(9, 107, 104)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    function updateModalityBar(id, name, val) {
+        const label = document.getElementById(`label-mod-${id}`);
+        const bar = document.getElementById(`bar-mod-${id}`);
+        if (label) label.textContent = `${name}: ${val}%`;
+        if (bar) bar.style.width = `${val}%`;
+    }
+
+    function updateTraitTag(id, val) {
+        const tag = document.getElementById(`tag-trait-${id}`);
+        if (tag) {
+            tag.textContent = val;
+            tag.className = `tag ${val.toLowerCase() === 'high' ? 'high' : 'mid'}`;
+        }
+    }
+
+    function getRecommendationsFor(strategy, styleIdx) {
+        const all = [
+            { id: 'vis', icon: 'fa-diagram-project', title: 'Visual Mapping', desc: 'Use diagrams & mind maps' },
+            { id: 'prob', icon: 'fa-lightbulb', title: 'Problem-First', desc: 'Start with challenges' },
+            { id: 'hand', icon: 'fa-hand', title: 'Hands-On', desc: 'Learn by doing' },
+            { id: 'collab', icon: 'fa-users', title: 'Collaborative', desc: 'Group discussions' },
+            { id: 'recall', icon: 'fa-brain', title: 'Active Recall', desc: 'Self-quizzing method' },
+            { id: 'space', icon: 'fa-calendar-days', title: 'Spaced Study', desc: 'Distribute over time' }
+        ];
+        
+        // Pick 4 based on strategy string
+        if (strategy.toLowerCase().includes("social")) return [all[3], all[1], all[4], all[5]];
+        if (strategy.toLowerCase().includes("visual")) return [all[0], all[1], all[2], all[5]];
+        if (styleIdx == 2) return [all[2], all[1], all[4], all[0]]; // Kinesthetic
+        return [all[0], all[1], all[2], all[3]];
+    }
+    
+    // Only run if we are actually on the dashboard logic sequence
+    if (document.querySelector(".dashboard")) {
+        fetchDashboardData();
     }
 });

@@ -46,7 +46,7 @@ a {
     text-decoration: none;
     color: rgb(255, 255, 255);
     transition: all 0.25s ease;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
 }
@@ -67,6 +67,46 @@ a {
     background-color: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.8);
     transform: translateY(-2px);
+}
+
+#nav-auth-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-profile-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-profile-chip img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffdca8;
+}
+
+.user-profile-chip span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffdca8;
+}
+
+.sign-out-btn {
+    cursor: pointer;
+    font-weight: 700;
+    color: white;
+}
+
+.sign-out-btn:hover {
+    color: #ff9191;
 }
 
 .main1 {
@@ -550,7 +590,9 @@ a {
 
 .dashboard {
     background: rgb(255, 251, 222);
-    padding: 40px;
+    padding: 10px 5%;
+    width: 90%;
+    margin: 0 auto;
     font-family: "Segoe UI", sans-serif;
     color: rgb(9, 107, 104);
 }
@@ -672,14 +714,17 @@ a {
 
 .ai-insight {
     background: rgba(255,255,255,0.15);
-    padding: 15px;
+    padding: 20px;
     border-radius: 12px;
+    margin-top: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .profiles {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
 }
 
 .profile-box {
@@ -1204,3 +1249,34 @@ a {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(9, 107, 104, 0.3);
 }
+.profiles { 
+    display: flex; 
+    justify-content: center;
+    gap: 30px; 
+    width: 100%; 
+    max-width: 1400px;
+    margin: 40px auto; 
+    box-sizing: border-box;
+}
+
+.profile-box { 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 24px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+    display: flex; 
+    flex-direction: column; 
+    width: 33.333%;
+    min-height: 520px; 
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.profile-box:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(9, 107, 104, 0.15);
+}
+
+.auth-form button, .login-box button { width: 100% !important; display: flex; justify-content: center; align-items: center; box-sizing: border-box; }
+.auth-form input, .login-box input { width: 100% !important; box-sizing: border-box; }
+.auth-footer-text, .login-box p { text-align: center !important; width: 100%; }

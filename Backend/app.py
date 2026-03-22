@@ -1,4 +1,5 @@
 import os
+import json
 import pickle
 import numpy as np
 import sqlite3
@@ -6,7 +7,7 @@ import jwt
 import datetime
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -31,10 +32,36 @@ def init_db():
                 user_id INTEGER,
                 learning_ability TEXT,
                 recommended_strategy TEXT,
+                input_features TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id)
             )
         ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS habits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                name TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS habit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                habit_id INTEGER,
+                date_str TEXT NOT NULL,
+                FOREIGN KEY(habit_id) REFERENCES habits(id)
+            )
+        ''')
+        
+        # Migration: add input_features column if table was previously created without it
+        try:
+            cursor.execute("ALTER TABLE predictions ADD COLUMN input_features TEXT")
+        except sqlite3.OperationalError:
+            pass # Column likely already exists
+            
         conn.commit()
 
 init_db()
@@ -127,11 +154,69 @@ def get_dashboard():
     """Retrieve history of predictions for the currently logged-in user."""
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT learning_ability, recommended_strategy, timestamp FROM predictions WHERE user_id = ? ORDER BY timestamp DESC", (request.user_id,))
+        cursor.execute("SELECT learning_ability, recommended_strategy, timestamp, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC", (request.user_id,))
         predictions = cursor.fetchall()
         
-    history = [{"learning_ability": p[0], "strategy": p[1], "timestamp": p[2]} for p in predictions]
+    history = [{"learning_ability": p[0], "strategy": p[1], "timestamp": p[2], "features": json.loads(p[3]) if p[3] else None} for p in predictions]
     return jsonify({'history': history}), 200
+
+@app.route('/api/habits', methods=['GET', 'POST', 'DELETE'])
+@token_required
+def modify_habits():
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        if request.method == 'GET':
+            cursor.execute("SELECT id, name FROM habits WHERE user_id = ?", (request.user_id,))
+            habits_data = cursor.fetchall()
+            
+            logs = {}
+            for h in habits_data:
+                cursor.execute("SELECT date_str FROM habit_logs WHERE habit_id = ?", (h[0],))
+                logs[str(h[0])] = {date_str[0]: True for date_str in cursor.fetchall()}
+            
+            return jsonify({
+                "habits": [{"id": str(h[0]), "name": h[1]} for h in habits_data],
+                "logs": logs
+            }), 200
+            
+        elif request.method == 'POST':
+            data = request.get_json()
+            if not data or not data.get('name'):
+                return jsonify({"error": "Name required"}), 400
+            cursor.execute("INSERT INTO habits (user_id, name) VALUES (?, ?)", (request.user_id, data['name']))
+            conn.commit()
+            return jsonify({"id": str(cursor.lastrowid), "name": data['name']}), 201
+            
+        elif request.method == 'DELETE':
+            habit_id = request.args.get('id')
+            if habit_id:
+                cursor.execute("DELETE FROM habit_logs WHERE habit_id = ? AND habit_id IN (SELECT id FROM habits WHERE user_id = ?)", (habit_id, request.user_id))
+                cursor.execute("DELETE FROM habits WHERE id = ? AND user_id = ?", (habit_id, request.user_id))
+                conn.commit()
+            return jsonify({"status": "deleted"}), 200
+
+@app.route('/api/habits/log', methods=['POST'])
+@token_required
+def toggle_habit_log():
+    data = request.get_json()
+    habit_id = data.get('habit_id')
+    date_str = data.get('date_str')
+    
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM habits WHERE id = ? AND user_id = ?", (habit_id, request.user_id))
+        if not cursor.fetchone(): return jsonify({"error": "Unauthorized"}), 403
+        
+        cursor.execute("SELECT id FROM habit_logs WHERE habit_id = ? AND date_str = ?", (habit_id, date_str))
+        log = cursor.fetchone()
+        if log:
+            cursor.execute("DELETE FROM habit_logs WHERE id = ?", (log[0],))
+            status = False
+        else:
+            cursor.execute("INSERT INTO habit_logs (habit_id, date_str) VALUES (?, ?)", (habit_id, date_str))
+            status = True
+        conn.commit()
+    return jsonify({"status": status}), 200
 
 @app.route('/api/predict', methods=['POST'])
 def predict_learning_ability():
@@ -170,8 +255,8 @@ def predict_learning_ability():
                 
                 with sqlite3.connect(DB_PATH) as conn:
                     cursor = conn.cursor()
-                    cursor.execute("INSERT INTO predictions (user_id, learning_ability, recommended_strategy) VALUES (?, ?, ?)", 
-                                   (user_id, str(ability), str(strategy)))
+                    cursor.execute("INSERT INTO predictions (user_id, learning_ability, recommended_strategy, input_features) VALUES (?, ?, ?, ?)", 
+                                   (user_id, str(ability), str(strategy), json.dumps(features)))
                     conn.commit()
             except Exception:
                 pass # Silently proceed without saving if token is invalid or missing
@@ -184,6 +269,19 @@ def predict_learning_ability():
         
     except Exception as e:
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
+
+@app.route('/<path:filename>')
+@app.route('/Frontend/<path:filename>')
+def serve_frontend(filename):
+    """Serve any file from the Frontend directory (like style.css)."""
+    frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'Frontend')
+    return send_from_directory(frontend_dir, filename)
+
+@app.route('/')
+def home():
+    """Redirect or serve the main index.html file when visiting localhost:5000/."""
+    frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'Frontend')
+    return send_from_directory(frontend_dir, 'index.html')
 
 if __name__ == '__main__':
     # Ensure the models directory exists

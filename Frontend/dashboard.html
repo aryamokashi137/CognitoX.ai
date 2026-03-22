@@ -6,6 +6,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -17,7 +18,9 @@
             <a href="questionaire.html" class="nav-btn"><i class="fa-solid fa-circle-question"></i> Questionaire</a>
             <a href="dashboard.html" class="nav-btn"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
             <a href="tracker.html" class="nav-btn"><i class="fa-solid fa-chart-column"></i> Tracker</a>
-            <a href="signup.html" class="nav-link"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
+            <div id="nav-auth-container">
+                <a href="signup.html" id="sign-up-link" class="nav-link"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
+            </div>
         </div>
     </header>
     <main class="dashboard">
@@ -52,6 +55,10 @@
                 <h3>Explorer</h3>
                 <p>Personality Type</p>
             </div>
+            <div>
+                <h3 id="display-procrastination">Low</h3>
+                <p>Procrastination Risk</p>
+            </div>
         </div>
     </section>
 
@@ -77,27 +84,8 @@
     <section class="ai-section">
         <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Study Recommendations</h2>
 
-        <div class="methods">
-            <div class="method-card">
-                <i class="fa-solid fa-diagram-project"></i>
-                <h4>Visual Mapping</h4>
-                <p>Use diagrams & mind maps</p>
-            </div>
-            <div class="method-card">
-                <i class="fa-solid fa-lightbulb"></i>
-                <h4>Problem-First</h4>
-                <p>Start with challenges</p>
-            </div>
-            <div class="method-card">
-                <i class="fa-solid fa-hand"></i>
-                <h4>Hands-On</h4>
-                <p>Learn by doing</p>
-            </div>
-            <div class="method-card">
-                <i class="fa-solid fa-users"></i>
-                <h4>Collaborative</h4>
-                <p>Group discussions</p>
-            </div>
+        <div class="methods" id="dynamic-recommendations">
+            <!-- Dynamically populated from script.js -->
         </div>
 
         <div class="ai-insight">
@@ -112,18 +100,18 @@
             <h3>Learning Modality</h3>
 
             <div class="progress">
-                <span style="color: black;">Visual</span><span style="color: black;">: 62%</span>
-                <div class="bar"><div style="width:62%"></div></div>
+                <span id="label-mod-1" style="color: black;">Visual: 0%</span>
+                <div class="bar"><div id="bar-mod-1" style="width:0%"></div></div>
             </div>
 
             <div class="progress">
-                <span style="color: black;">Reading/Writing</span><span style="color: black;">: 45%</span>
-                <div class="bar"><div style="width:45%"></div></div>
+                <span id="label-mod-2" style="color: black;">Reading: 0%</span>
+                <div class="bar"><div id="bar-mod-2" style="width:0%"></div></div>
             </div>
 
             <div class="progress">
-                <span style="color: black;">Kinesthetic</span><span style="color: black;">: 23%</span>
-                <div class="bar"><div style="width:23%;"></div></div>
+                <span id="label-mod-3" style="color: black;">Kinesthetic: 0%</span>
+                <div class="bar"><div id="bar-mod-3" style="width:0%"></div></div>
             </div>
         </div>
 
@@ -131,24 +119,37 @@
             <h3>Personality Profile</h3>
 
             <div class="trait">
-                <span>Openness</span><span class="tag high">High</span>
+                <span>Openness</span><span id="tag-trait-1" class="tag mid">Analyzing...</span>
             </div>
             <div class="trait">
-                <span>Conscientiousness</span><span class="tag high">High</span>
+                <span>Conscientiousness</span><span id="tag-trait-2" class="tag mid">Analyzing...</span>
             </div>
             <div class="trait">
-                <span>Extraversion</span><span class="tag mid">Moderate</span>
+                <span>Extraversion</span><span id="tag-trait-3" class="tag mid">Analyzing...</span>
             </div>
             <div class="trait">
-                <span>Agreeableness</span><span class="tag high">High</span>
+                <span>Agreeableness</span><span id="tag-trait-4" class="tag mid">Analyzing...</span>
             </div>
             <div class="trait">
-                <span>Neuroticism</span><span class="tag mid">Moderate</span>
+                <span>Neuroticism</span><span id="tag-trait-5" class="tag mid">Analyzing...</span>
             </div>
 
             <div class="player">
-                <strong>Player Type:</strong> Explorer  
-                <p>Curious, discovery-driven learner</p>
+                <strong>Player Type:</strong> <span id="display-player-type">Analyzing...</span>
+                <p id="display-player-desc">Calculating your learning persona based on AI insights.</p>
+            </div>
+        </div>
+
+        <div class="profile-box">
+            <h3>Productivity Analytics</h3>
+            <div style="height: 250px; position: relative;">
+                <canvas id="productivityChart"></canvas>
+            </div>
+            <div class="trait" style="margin-top: 15px;">
+                <span>Focus Score</span><span id="label-focus-score" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Stress Resistance</span><span id="label-stress-score" class="tag mid">Analyzing...</span>
             </div>
         </div>
 
