@@ -1,0 +1,18 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "username": "aryamokashi137",
+            "email": "aryamokashi137@cognitox.ai"
+        }
+    ],
+    "predictions": [
+        {
+            "id": 1,
+            "user_id": 1,
+            "ability": "Consistent",
+            "strategy": "Socializer",
+            "time": "2026-03-22 12:53:43"
+        }
+    ]
+}

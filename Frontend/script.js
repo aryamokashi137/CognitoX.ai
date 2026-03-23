@@ -3,7 +3,7 @@
     const protectedPages = ['dashboard.html', 'questionaire.html', 'tracker.html'];
     const currentPath = window.location.pathname;
     const isProtected = protectedPages.some(page => currentPath.includes(page));
-    
+
     if (isProtected && !localStorage.getItem('authToken')) {
         alert("You must be logged in to access this page!");
         window.location.href = "index.html";
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-     // -------------login form validation----------------
+    // -------------login form validation----------------
     const loginForm = document.querySelector(".login-box form");
 
     if (loginForm) {
@@ -74,9 +74,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     alert("Login successful!");
                     // Save JWT token
@@ -96,135 +96,135 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-   
+
 
 });
 
-        // ------questionaire page--------
-        const questions = [
-            {
-                tag: "Learning Schedule",
-                question: "What time of day do you feel most productive for learning?",
-                options: [
-                    "Early morning (5–8 AM)",
-                    "Morning (8–12 PM)",
-                    "Afternoon (12–5 PM)",
-                    "Evening / Night"
-                ]
-            },
-            {
-                tag: "Learning Style",
-                question: "How do you prefer to learn new concepts?",
-                options: [
-                    "Visual aids (videos, diagrams)",
-                    "Reading and writing",
-                    "Hands-on practice",
-                    "Discussion and collaboration"
-                ]
-            },
-            {
-                tag: "Study Environment",
-                question: "Where do you study best?",
-                options: [
-                    "Quiet library or room",
-                    "Coffee shop with background noise",
-                    "At home with music",
-                    "Outdoors or changing locations"
-                ]
-            },
-            {
-                tag: "Focus Duration",
-                question: "How long can you focus without a break?",
-                options: [
-                    "15-25 minutes",
-                    "25-45 minutes",
-                    "45-90 minutes",
-                    "90+ minutes"
-                ]
-            },
-            {
-                tag: "Learning Pace",
-                question: "What learning pace suits you best?",
-                options: [
-                    "Slow and thorough",
-                    "Moderate with reviews",
-                    "Fast-paced learning",
-                    "Self-paced flexibility"
-                ]
-            },
-            {
-                tag: "Study Method",
-                question: "Which study method works best for you?",
-                options: [
-                    "Making notes and summaries",
-                    "Flashcards and repetition",
-                    "Teaching others",
-                    "Practice problems and tests"
-                ]
-            },
-            {
-                tag: "Motivation",
-                question: "What motivates you to learn?",
-                options: [
-                    "Career advancement",
-                    "Personal interest",
-                    "Academic requirements",
-                    "Solving real-world problems"
-                ]
-            },
-            {
-                tag: "Learning Challenges",
-                question: "What's your biggest learning challenge?",
-                options: [
-                    "Staying focused",
-                    "Managing time",
-                    "Understanding complex topics",
-                    "Remembering information"
-                ]
-            },
-            {
-                tag: "Stress Response",
-                question: "How do you usually handle academic or study-related stress?",
-                options: [
-                    "Take breaks and practice relaxation",
-                    "Push through and work harder",
-                    "Procrastinate and avoid the work",
-                    "Seek help from peers or mentors"
-                ]
-            },
-            {
-                tag: "Retrieval Practice",
-                question: "When preparing for an exam, how do you review your material?",
-                options: [
-                    "Cramming the night before",
-                    "Spaced repetition over several days",
-                    "Last-minute skimming of notes",
-                    "Discussing the topics with others"
-                ]
-            },
-            {
-                tag: "Information Processing",
-                question: "How do you best process complex new information?",
-                options: [
-                    "Breaking it down into chunks",
-                    "Looking at the big picture first",
-                    "Creating analogies",
-                    "Repeatedly reading it"
-                ]
-            },
-            {
-                tag: "Technology Usage",
-                question: "How heavily do you rely on technology while studying?",
-                options: [
-                    "Minimal (Textbooks/Handwritten notes)",
-                    "Moderate (Research/Organizing)",
-                    "Heavy (AI solvers/Digital summaries)",
-                    "Complete dependency"
-                ]
-            }
-        ];
+// ------questionaire page--------
+const questions = [
+    {
+        tag: "Learning Schedule",
+        question: "What time of day do you feel most productive for learning?",
+        options: [
+            "Early morning (5–8 AM)",
+            "Morning (8–12 PM)",
+            "Afternoon (12–5 PM)",
+            "Evening / Night"
+        ]
+    },
+    {
+        tag: "Learning Style",
+        question: "How do you prefer to learn new concepts?",
+        options: [
+            "Visual aids (videos, diagrams)",
+            "Reading and writing",
+            "Hands-on practice",
+            "Discussion and collaboration"
+        ]
+    },
+    {
+        tag: "Study Environment",
+        question: "Where do you study best?",
+        options: [
+            "Quiet library or room",
+            "Coffee shop with background noise",
+            "At home with music",
+            "Outdoors or changing locations"
+        ]
+    },
+    {
+        tag: "Focus Duration",
+        question: "How long can you focus without a break?",
+        options: [
+            "15-25 minutes",
+            "25-45 minutes",
+            "45-90 minutes",
+            "90+ minutes"
+        ]
+    },
+    {
+        tag: "Learning Pace",
+        question: "What learning pace suits you best?",
+        options: [
+            "Slow and thorough",
+            "Moderate with reviews",
+            "Fast-paced learning",
+            "Self-paced flexibility"
+        ]
+    },
+    {
+        tag: "Study Method",
+        question: "Which study method works best for you?",
+        options: [
+            "Making notes and summaries",
+            "Flashcards and repetition",
+            "Teaching others",
+            "Practice problems and tests"
+        ]
+    },
+    {
+        tag: "Motivation",
+        question: "What motivates you to learn?",
+        options: [
+            "Career advancement",
+            "Personal interest",
+            "Academic requirements",
+            "Solving real-world problems"
+        ]
+    },
+    {
+        tag: "Learning Challenges",
+        question: "What's your biggest learning challenge?",
+        options: [
+            "Staying focused",
+            "Managing time",
+            "Understanding complex topics",
+            "Remembering information"
+        ]
+    },
+    {
+        tag: "Stress Response",
+        question: "How do you usually handle academic or study-related stress?",
+        options: [
+            "Take breaks and practice relaxation",
+            "Push through and work harder",
+            "Procrastinate and avoid the work",
+            "Seek help from peers or mentors"
+        ]
+    },
+    {
+        tag: "Retrieval Practice",
+        question: "When preparing for an exam, how do you review your material?",
+        options: [
+            "Cramming the night before",
+            "Spaced repetition over several days",
+            "Last-minute skimming of notes",
+            "Discussing the topics with others"
+        ]
+    },
+    {
+        tag: "Information Processing",
+        question: "How do you best process complex new information?",
+        options: [
+            "Breaking it down into chunks",
+            "Looking at the big picture first",
+            "Creating analogies",
+            "Repeatedly reading it"
+        ]
+    },
+    {
+        tag: "Technology Usage",
+        question: "How heavily do you rely on technology while studying?",
+        options: [
+            "Minimal (Textbooks/Handwritten notes)",
+            "Moderate (Research/Organizing)",
+            "Heavy (AI solvers/Digital summaries)",
+            "Complete dependency"
+        ]
+    }
+];
 
-       // Store user answers
+// Store user answers
 let currentQuestion = 0;
 let answers = [];
 
@@ -252,7 +252,7 @@ function loadQuestion() {
     q.options.forEach((option, index) => {
         const checked =
             answers[currentQuestion] &&
-            answers[currentQuestion].answer === option
+                answers[currentQuestion].answer === option
                 ? 'checked'
                 : '';
 
@@ -271,13 +271,12 @@ function loadQuestion() {
     // Back + Next buttons
     optionsHTML += `
         <div class="button-container">
-            ${
-                currentQuestion > 0
-                    ? `<button type="button" class="back-btn" onclick="handleBack()">
+            ${currentQuestion > 0
+            ? `<button type="button" class="back-btn" onclick="handleBack()">
                            <i class="fa-solid fa-arrow-left"></i> Back
                        </button>`
-                    : '<div></div>'
-            }
+            : '<div></div>'
+        }
 
             <button type="button" class="next-btn" onclick="handleNext()">
                 ${buttonText} <i class="fa-solid fa-arrow-right"></i>
@@ -327,14 +326,14 @@ function handleBack() {
 // Finish assessment
 async function finishAssessment() {
     localStorage.setItem('assessmentAnswers', JSON.stringify(answers));
-    
+
     // Extract the exact index numbers (0, 1, 2, or 3) selected for the 12 questions
     const features = answers.map((ans, idx) => {
         return questions[idx].options.indexOf(ans.answer);
     });
 
     const token = localStorage.getItem("authToken");
-    
+
     try {
         const response = await fetch("http://127.0.0.1:5000/api/predict", {
             method: "POST",
@@ -344,9 +343,9 @@ async function finishAssessment() {
             },
             body: JSON.stringify({ features })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             alert('Assessment completed! Redirecting to dashboard...');
             // Save the prediction to local storage so the dashboard can display it immediately
@@ -383,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const username = inputs[1].value.trim();
             const password = inputs[2].value;
             const confirmPassword = inputs[3].value;
-            
+
             // Assume the first available email field, or create a dummy email if none exists on signup UI yet
             const email = username + "@cognitox.ai"; // Placeholder if form doesn't have an email field
 
@@ -429,124 +428,124 @@ document.addEventListener("DOMContentLoaded", () => {
 
 //--------tracker page--------
 
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let habits = [];
-        let habitData = {};
-        let pieChart, barChart;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let habits = [];
+let habitData = {};
+let pieChart, barChart;
 
-        async function fetchHabits() {
-            const token = localStorage.getItem('authToken');
-            if(!token) return;
-            try {
-                const res = await fetch("http://localhost:5000/api/habits", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    habits = data.habits || [];
-                    habitData = data.logs || {};
-                    renderHabitTable();
-                    updateStats();
-                    updateCharts();
-                }
-            } catch (e) {
-                console.error("Error fetching habits", e);
-            }
-        }
-
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"];
-
-        function initializeApp() {
-            updateMonthLabel();
-            initializeCharts();
-            fetchHabits();
-            
-            document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
-            document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
-            document.getElementById('addHabitBtn').addEventListener('click', addHabit);
-            document.getElementById('habitInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addHabit();
-            });
-        }
-
-        function changeMonth(delta) {
-            currentMonth += delta;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            updateMonthLabel();
+async function fetchHabits() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+        const res = await fetch("http://localhost:5000/api/habits", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            habits = data.habits || [];
+            habitData = data.logs || {};
             renderHabitTable();
             updateStats();
             updateCharts();
         }
+    } catch (e) {
+        console.error("Error fetching habits", e);
+    }
+}
 
-        function updateMonthLabel() {
-            document.getElementById('monthLabel').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+function initializeApp() {
+    updateMonthLabel();
+    initializeCharts();
+    fetchHabits();
+
+    document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+    document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+    document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+    document.getElementById('habitInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addHabit();
+    });
+}
+
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    } else if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    updateMonthLabel();
+    renderHabitTable();
+    updateStats();
+    updateCharts();
+}
+
+function updateMonthLabel() {
+    document.getElementById('monthLabel').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+}
+
+async function addHabit() {
+    const input = document.getElementById('habitInput');
+    const habitName = input.value.trim();
+    const token = localStorage.getItem('authToken');
+
+    if (habitName && token) {
+        const res = await fetch("http://localhost:5000/api/habits", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ name: habitName })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            habits.push({ id: data.id, name: data.name });
+            habitData[data.id] = {};
+            input.value = '';
+            renderHabitTable();
+            updateStats();
+            updateCharts();
         }
+    }
+}
 
-        async function addHabit() {
-            const input = document.getElementById('habitInput');
-            const habitName = input.value.trim();
-            const token = localStorage.getItem('authToken');
-            
-            if (habitName && token) {
-                const res = await fetch("http://localhost:5000/api/habits", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                    body: JSON.stringify({ name: habitName })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    habits.push({ id: data.id, name: data.name });
-                    habitData[data.id] = {};
-                    input.value = '';
-                    renderHabitTable();
-                    updateStats();
-                    updateCharts();
-                }
-            }
-        }
+async function deleteHabit(habitId) {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    const res = await fetch(`http://localhost:5000/api/habits?id=${habitId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (res.ok) {
+        habits = habits.filter(h => String(h.id) !== String(habitId));
+        delete habitData[habitId];
+        renderHabitTable();
+        updateStats();
+        updateCharts();
+    }
+}
 
-        async function deleteHabit(habitId) {
-            const token = localStorage.getItem('authToken');
-            if (!token) return;
-            const res = await fetch(`http://localhost:5000/api/habits?id=${habitId}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (res.ok) {
-                habits = habits.filter(h => String(h.id) !== String(habitId));
-                delete habitData[habitId];
-                renderHabitTable();
-                updateStats();
-                updateCharts();
-            }
-        }
+function getDaysInMonth() {
+    return new Date(currentYear, currentMonth + 1, 0).getDate();
+}
 
-        function getDaysInMonth() {
-            return new Date(currentYear, currentMonth + 1, 0).getDate();
-        }
+function renderHabitTable() {
+    const days = getDaysInMonth();
+    const header = document.getElementById('tableHeader');
+    const body = document.getElementById('habitBody');
 
-        function renderHabitTable() {
-            const days = getDaysInMonth();
-            const header = document.getElementById('tableHeader');
-            const body = document.getElementById('habitBody');
-            
-            // Render header
-            header.innerHTML = '<th>Habit Name</th>';
-            for (let i = 1; i <= days; i++) {
-                header.innerHTML += `<th>${i}</th>`;
-            }
-            
-            // Render body
-            if (habits.length === 0) {
-                body.innerHTML = `
+    // Render header
+    header.innerHTML = '<th>Habit Name</th>';
+    for (let i = 1; i <= days; i++) {
+        header.innerHTML += `<th>${i}</th>`;
+    }
+
+    // Render body
+    if (habits.length === 0) {
+        body.innerHTML = `
                     <tr>
                         <td colspan="${days + 1}">
                             <div class="empty-state">
@@ -556,13 +555,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         </td>
                     </tr>
                 `;
-                return;
-            }
-            
-            body.innerHTML = '';
-            habits.forEach(habit => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+        return;
+    }
+
+    body.innerHTML = '';
+    habits.forEach(habit => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
                     <td>
                         ${habit.name}
                         <button class="delete-habit" onclick="deleteHabit('${habit.id}')">
@@ -570,200 +569,200 @@ document.addEventListener("DOMContentLoaded", () => {
                         </button>
                     </td>
                 `;
-                
-                for (let day = 1; day <= days; day++) {
-                    const key = `${currentYear}-${currentMonth}-${day}`;
-                    const isChecked = habitData[habit.id]?.[key] || false;
-                    
-                    const cell = document.createElement('td');
-                    cell.className = 'checkbox-cell';
-                    cell.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} 
-                        onchange="toggleHabit('${habit.id}', ${day})">`;
-                    row.appendChild(cell);
-                }
-                
-                body.appendChild(row);
-            });
-        }
 
-        async function toggleHabit(habitId, day) {
-            if (!habitData[habitId]) habitData[habitId] = {};
+        for (let day = 1; day <= days; day++) {
             const key = `${currentYear}-${currentMonth}-${day}`;
-            habitData[habitId][key] = !habitData[habitId][key];
-            updateStats();
-            updateCharts();
-            
-            const token = localStorage.getItem('authToken');
-            if(token) {
-                fetch("http://localhost:5000/api/habits/log", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                    body: JSON.stringify({ habit_id: habitId, date_str: key })
-                });
-            }
+            const isChecked = habitData[habit.id]?.[key] || false;
+
+            const cell = document.createElement('td');
+            cell.className = 'checkbox-cell';
+            cell.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} 
+                        onchange="toggleHabit('${habit.id}', ${day})">`;
+            row.appendChild(cell);
         }
 
-        function updateStats() {
-            // Update habit count
-            document.getElementById('habitCount').textContent = habits.length;
-            
-            // Calculate completion rate
-            const days = getDaysInMonth();
-            let totalPossible = habits.length * days;
-            let totalCompleted = 0;
-            
+        body.appendChild(row);
+    });
+}
+
+async function toggleHabit(habitId, day) {
+    if (!habitData[habitId]) habitData[habitId] = {};
+    const key = `${currentYear}-${currentMonth}-${day}`;
+    habitData[habitId][key] = !habitData[habitId][key];
+    updateStats();
+    updateCharts();
+
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        fetch("http://localhost:5000/api/habits/log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ habit_id: habitId, date_str: key })
+        });
+    }
+}
+
+function updateStats() {
+    // Update habit count
+    document.getElementById('habitCount').textContent = habits.length;
+
+    // Calculate completion rate
+    const days = getDaysInMonth();
+    let totalPossible = habits.length * days;
+    let totalCompleted = 0;
+
+    habits.forEach(habit => {
+        for (let day = 1; day <= days; day++) {
+            const key = `${currentYear}-${currentMonth}-${day}`;
+            if (habitData[habit.id]?.[key]) totalCompleted++;
+        }
+    });
+
+    const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+    document.getElementById('completion').textContent = completionRate + '%';
+
+    // Calculate streak (consecutive days with all habits completed)
+    let streak = 0;
+    const today = new Date();
+
+    if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
+        for (let day = today.getDate(); day >= 1; day--) {
+            let allCompleted = true;
             habits.forEach(habit => {
-                for (let day = 1; day <= days; day++) {
-                    const key = `${currentYear}-${currentMonth}-${day}`;
-                    if (habitData[habit.id]?.[key]) totalCompleted++;
-                }
+                const key = `${currentYear}-${currentMonth}-${day}`;
+                if (!habitData[habit.id]?.[key]) allCompleted = false;
             });
-            
-            const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
-            document.getElementById('completion').textContent = completionRate + '%';
-            
-            // Calculate streak (consecutive days with all habits completed)
-            let streak = 0;
-            const today = new Date();
-            
-            if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
-                for (let day = today.getDate(); day >= 1; day--) {
-                    let allCompleted = true;
-                    habits.forEach(habit => {
-                        const key = `${currentYear}-${currentMonth}-${day}`;
-                        if (!habitData[habit.id]?.[key]) allCompleted = false;
-                    });
-                    if (allCompleted && habits.length > 0) streak++;
-                    else break;
-                }
-            }
-            
-            document.getElementById('streak').textContent = streak;
+            if (allCompleted && habits.length > 0) streak++;
+            else break;
         }
+    }
 
-        function initializeCharts() {
-            // Pie Chart
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            pieChart = new Chart(pieCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Completed', 'Pending'],
-                    datasets: [{
-                        data: [0, 100],
-                        backgroundColor: ['rgb(9, 107, 104)', 'rgb(144, 209, 202)']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: 'rgb(26, 42, 79)',
-                                font: {
-                                    size: 14,
-                                    weight: 600
-                                }
-                            }
+    document.getElementById('streak').textContent = streak;
+}
+
+function initializeCharts() {
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: [0, 100],
+                backgroundColor: ['rgb(9, 107, 104)', 'rgb(144, 209, 202)']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: 'rgb(26, 42, 79)',
+                        font: {
+                            size: 14,
+                            weight: 600
                         }
                     }
                 }
-            });
-            
-            // Bar Chart
-            const barCtx = document.getElementById('barChart').getContext('2d');
-            barChart = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Habits Completed',
-                        data: [],
-                        backgroundColor: 'rgb(9, 107, 104)',
-                        borderColor: 'rgb(26, 42, 79)',
-                        borderWidth: 2,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                color: 'rgb(26, 42, 79)',
-                                font: {
-                                    weight: 600
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(26, 42, 79, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: 'rgb(26, 42, 79)',
-                                font: {
-                                    weight: 600
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
+            }
+        }
+    });
+
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Habits Completed',
+                data: [],
+                backgroundColor: 'rgb(9, 107, 104)',
+                borderColor: 'rgb(26, 42, 79)',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        color: 'rgb(26, 42, 79)',
+                        font: {
+                            weight: 600
                         }
                     },
-                    plugins: {
-                        legend: {
-                            display: false
+                    grid: {
+                        color: 'rgba(26, 42, 79, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: 'rgb(26, 42, 79)',
+                        font: {
+                            weight: 600
                         }
+                    },
+                    grid: {
+                        display: false
                     }
                 }
-            });
-        }
-
-        function updateCharts() {
-            const days = getDaysInMonth();
-            
-            // Update Pie Chart
-            let totalPossible = habits.length * days;
-            let totalCompleted = 0;
-            
-            habits.forEach(habit => {
-                for (let day = 1; day <= days; day++) {
-                    const key = `${currentYear}-${currentMonth}-${day}`;
-                    if (habitData[habit.id]?.[key]) totalCompleted++;
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
-            });
-            
-            pieChart.data.datasets[0].data = [totalCompleted, totalPossible - totalCompleted];
-            pieChart.update();
-            
-            // Update Bar Chart
-            const dailyData = [];
-            const labels = [];
-            
-            for (let day = 1; day <= days; day++) {
-                let completed = 0;
-                habits.forEach(habit => {
-                    const key = `${currentYear}-${currentMonth}-${day}`;
-                    if (habitData[habit.id]?.[key]) completed++;
-                });
-                dailyData.push(completed);
-                labels.push(`${day}`);
             }
-            
-            barChart.data.labels = labels;
-            barChart.data.datasets[0].data = dailyData;
-            barChart.update();
         }
+    });
+}
 
-        // Initialize app on load
-        if (document.getElementById('monthLabel')) {
-            initializeApp();
+function updateCharts() {
+    const days = getDaysInMonth();
+
+    // Update Pie Chart
+    let totalPossible = habits.length * days;
+    let totalCompleted = 0;
+
+    habits.forEach(habit => {
+        for (let day = 1; day <= days; day++) {
+            const key = `${currentYear}-${currentMonth}-${day}`;
+            if (habitData[habit.id]?.[key]) totalCompleted++;
         }
+    });
+
+    pieChart.data.datasets[0].data = [totalCompleted, totalPossible - totalCompleted];
+    pieChart.update();
+
+    // Update Bar Chart
+    const dailyData = [];
+    const labels = [];
+
+    for (let day = 1; day <= days; day++) {
+        let completed = 0;
+        habits.forEach(habit => {
+            const key = `${currentYear}-${currentMonth}-${day}`;
+            if (habitData[habit.id]?.[key]) completed++;
+        });
+        dailyData.push(completed);
+        labels.push(`${day}`);
+    }
+
+    barChart.data.labels = labels;
+    barChart.data.datasets[0].data = dailyData;
+    barChart.update();
+}
+
+// Initialize app on load
+if (document.getElementById('monthLabel')) {
+    initializeApp();
+}
 
 // ---------dashboard page----------
 document.addEventListener("DOMContentLoaded", function () {
@@ -810,9 +809,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Update profile card
             document.querySelector(".profile-info h2").textContent = name;
-            
+
             // You can also update the email if you have a place to display it.
-            
+
             popup.style.display = "none";
         });
     }
@@ -827,11 +826,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-            
+
             const aiSection = document.querySelector(".ai-section");
             const profilesSection = document.querySelector(".profiles");
             const profileStats = document.querySelector(".profile-stats");
-            
+
             const usernameElem = document.querySelector(".profile-info h2");
             const savedUsername = localStorage.getItem("username");
             if (usernameElem && savedUsername) usernameElem.textContent = savedUsername;
@@ -840,15 +839,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 const latest = data.history[0]; // first item is newest
                 const styleElem = document.getElementById("display-learning-style");
                 if (styleElem) styleElem.textContent = latest.learning_ability;
-                
+
                 const insightAbilityElem = document.getElementById("display-insight-ability");
                 if (insightAbilityElem) insightAbilityElem.textContent = latest.learning_ability;
-                
+
                 const insightStrategyElem = document.getElementById("display-insight-strategy");
                 if (insightStrategyElem) {
                     insightStrategyElem.textContent = "Recommended Strategy: " + latest.strategy;
                 }
-                
+
                 // Calculate and display procrastination risk based on features
                 if (latest.features) {
                     const risk = calculateProcrastinationRisk(latest.features);
@@ -861,7 +860,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (aiSection) aiSection.style.display = 'block';
                 if (profilesSection) profilesSection.style.display = 'flex';
-                
+
             } else {
                 // If the user has never taken a test, hide the static data and show a prompt
                 if (aiSection) aiSection.style.display = 'none';
@@ -877,13 +876,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function calculateProcrastinationRisk(features) {
         let score = 0;
-        if (features[0] == 0) score += 2; 
-        if (features[7] == 1 || features[7] == 2) score += 3; 
-        if (features[8] == 2) score += 4; 
-        if (features[9] == 0) score += 2; 
-        
+        if (features[0] == 0) score += 2;
+        if (features[7] == 1 || features[7] == 2) score += 3;
+        if (features[8] == 2) score += 4;
+        if (features[9] == 0) score += 2;
+
         if (score >= 7) return "High"; // Removed 🔥 star/emoji as requested
-        if (score >= 4) return "Moderate"; 
+        if (score >= 4) return "Moderate";
         return "Low";
     }
 
@@ -916,7 +915,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // 3. Player Type
         const playerTypeElem = document.getElementById("display-player-type");
         const playerDescElem = document.getElementById("display-player-desc");
-        
+
         if (features[11] == 1) {
             playerTypeElem.textContent = "Architect";
             playerDescElem.textContent = "You see the big picture and build complex mental frameworks.";
@@ -934,7 +933,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update focus/stress score tags
         const focusScore = (features[3] * 25) + 10; // Simple scalar for demo
         const stressScore = (features[8] == 0) ? 90 : (features[8] == 1 ? 50 : 20);
-        
+
         document.getElementById("label-focus-score").textContent = focusScore + "%";
         document.getElementById("label-stress-score").textContent = stressScore + "%";
 
@@ -1021,14 +1020,14 @@ document.addEventListener("DOMContentLoaded", function () {
             { id: 'recall', icon: 'fa-brain', title: 'Active Recall', desc: 'Self-quizzing method' },
             { id: 'space', icon: 'fa-calendar-days', title: 'Spaced Study', desc: 'Distribute over time' }
         ];
-        
+
         // Pick 4 based on strategy string
         if (strategy.toLowerCase().includes("social")) return [all[3], all[1], all[4], all[5]];
         if (strategy.toLowerCase().includes("visual")) return [all[0], all[1], all[2], all[5]];
         if (styleIdx == 2) return [all[2], all[1], all[4], all[0]]; // Kinesthetic
         return [all[0], all[1], all[2], all[3]];
     }
-    
+
     // Only run if we are actually on the dashboard logic sequence
     if (document.querySelector(".dashboard")) {
         fetchDashboardData();
