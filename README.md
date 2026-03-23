@@ -22,6 +22,7 @@ CognitoX.ai is an intelligent platform designed to identify learning patterns an
 - **Backend:** Python (Flask), SQLite3 for lightweight and reliable data storage.
 - **Machine Learning:** NumPy, Scikit-learn, and Pickle for predictive modeling.
 - **Authentication:** PyJWT, Werkzeug (Password Hashing).
+- **Data Versioning:** DVC (Data Version Control) for ML model and dataset management.
 - **Environment:** virtualenv, pip.
 
 ---
@@ -99,6 +100,14 @@ The project includes a GitHub Actions workflow (`.github/workflows/ci-cd.yml`) t
 3. Runs the test suite in `Backend/tests/` upon every push or pull request to the `main` branch.
 
 ---
+
+## 🏗️ Data Management (DVC)
+This project uses **DVC (Data Version Control)** to separate code from large binary files (like AI models).
+- AI models are stored in `Backend/models/` but versioned through `.dvc` files.
+- To pull the latest model (if configured with a remote):
+  ```bash
+  dvc pull
+  ```
 
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
