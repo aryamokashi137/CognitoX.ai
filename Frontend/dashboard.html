@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <a href="index.html#home" style="font-size: 28px; color: rgb(255, 255, 255); font-weight: 700; display: flex; align-items: center; gap: 8px;"> <i class="fa-solid fa-head-side-virus"></i>CognitoX.ai</a>
+            <a href="index.html#home" class="nav-link"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="index.html#how-it-works" class="nav-link"><i class="fa-solid fa-gear"></i> How It Works</a>
+            <a href="index.html#features" class="nav-link"><i class="fa-solid fa-book-open"></i> Features</a>
+            <a href="questionaire.html" class="nav-btn"><i class="fa-solid fa-circle-question"></i> Questionaire</a>
+            <a href="dashboard.html" class="nav-btn"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <a href="tracker.html" class="nav-btn"><i class="fa-solid fa-chart-column"></i> Tracker</a>
+            <div id="nav-auth-container">
+                <a href="signup.html" id="sign-up-link" class="nav-link"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
+            </div>
+        </div>
+    </header>
+    <main class="dashboard">
+    <section class="dashboard-header">
+        <div>
+            <h1 style="color: black;">Learning Dashboard</h1>
+            <p>Your personalized learning intelligence report</p>
+        </div>
+        <button class="settings-btn">
+            <i class="fa-solid fa-gear"></i> Settings
+        </button>
+    </section>
+
+    <section class="profile-card">
+        <div class="profile-info">
+            <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid rgb(255, 251, 222); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <div>
+                <h2 style="margin-bottom: 5px; color: black;">Arya Mokashi</h2>
+                <span class="badge" style="padding: 8px">IT Student</span>
+            </div>
+        </div>
+        <div class="profile-stats">
+            <div>
+                <h3>85%</h3>
+                <p>Learning Efficiency</p>
+            </div>
+            <div>
+                <h3 id="display-learning-style">Visual Explorer</h3>
+                <p>Learning Style</p>
+            </div>
+            <div>
+                <h3>Explorer</h3>
+                <p>Personality Type</p>
+            </div>
+            <div>
+                <h3 id="display-procrastination">Low</h3>
+                <p>Procrastination Risk</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="settings-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-btn">&times;</span>
+            <h2>Edit Profile</h2>
+            <div class="profile-pic-container">
+                <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Profile" id="popup-profile-pic">
+                <input type="file" id="profile-pic-upload" accept="image/*">
+                <label for="profile-pic-upload" class="upload-btn"><i class="fa-solid fa-camera"></i> Change Profile Photo</label>
+            </div>
+            <form id="settings-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="Arya Mokashi">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="arya.mokashi@example.com">
+                <button type="submit" class="save-btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <section class="ai-section">
+        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Study Recommendations</h2>
+
+        <div class="methods" id="dynamic-recommendations">
+            <!-- Dynamically populated from script.js -->
+        </div>
+
+        <div class="ai-insight">
+            <strong>AI Insight:</strong>
+            You are a dominant <b id="display-insight-ability">Visual Explorer</b>. <span id="display-insight-strategy">You learn best through structured visuals combined with hands-on experimentation.</span>
+        </div>
+    </section>
+
+    <section class="profiles">
+
+        <div class="profile-box">
+            <h3>Learning Modality</h3>
+
+            <div class="progress">
+                <span id="label-mod-1" style="color: black;">Visual: 0%</span>
+                <div class="bar"><div id="bar-mod-1" style="width:0%"></div></div>
+            </div>
+
+            <div class="progress">
+                <span id="label-mod-2" style="color: black;">Reading: 0%</span>
+                <div class="bar"><div id="bar-mod-2" style="width:0%"></div></div>
+            </div>
+
+            <div class="progress">
+                <span id="label-mod-3" style="color: black;">Kinesthetic: 0%</span>
+                <div class="bar"><div id="bar-mod-3" style="width:0%"></div></div>
+            </div>
+        </div>
+
+        <div class="profile-box">
+            <h3>Personality Profile</h3>
+
+            <div class="trait">
+                <span>Openness</span><span id="tag-trait-1" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Conscientiousness</span><span id="tag-trait-2" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Extraversion</span><span id="tag-trait-3" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Agreeableness</span><span id="tag-trait-4" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Neuroticism</span><span id="tag-trait-5" class="tag mid">Analyzing...</span>
+            </div>
+
+            <div class="player">
+                <strong>Player Type:</strong> <span id="display-player-type">Analyzing...</span>
+                <p id="display-player-desc">Calculating your learning persona based on AI insights.</p>
+            </div>
+        </div>
+
+        <div class="profile-box">
+            <h3>Productivity Analytics</h3>
+            <div style="height: 250px; position: relative;">
+                <canvas id="productivityChart"></canvas>
+            </div>
+            <div class="trait" style="margin-top: 15px;">
+                <span>Focus Score</span><span id="label-focus-score" class="tag mid">Analyzing...</span>
+            </div>
+            <div class="trait">
+                <span>Stress Resistance</span><span id="label-stress-score" class="tag mid">Analyzing...</span>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+    <footer>
+        <div class="foot">
+            <div class="footer-container">
+            <div class="footer-brand">
+            <p style="font-size: 30px;"><strong>CognitoX.ai</strong></p>
+            <p class="footer-tagline">Identify Learning Patterns using AI</p>
+        </div>
+        <nav class="footer-links">
+            <a href="index.html#home">Home</a>  
+            <a href="index.html#how-it-works">How It Works</a>
+            <a href="index.html#features">Features</a>
+            <a href="questionaire.html">Questionaire</a>
+        </nav>
+            <div class="footer-meta">
+            <p>© 2026 CognitoX.ai. All rights reserved.</p>
+        </div>
+    </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

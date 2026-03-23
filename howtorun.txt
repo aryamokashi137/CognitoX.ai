@@ -1,0 +1,64 @@
+===================================================
+CognitoX.ai - Setup and Run Instructions
+===================================================
+
+This project consists of two parts:
+1. The Backend (Flask + SQLite Server)
+2. The Frontend (HTML/JS/CSS Browser interface)
+
+Both need to be running for the full experience.
+
+---------------------------------------------------
+HOW TO RUN THE BACKEND SERVER
+---------------------------------------------------
+1. Open a terminal (Command Prompt or PowerShell) and navigate to the project folder:
+   cd path\to\CognitoX.ai
+
+2. Create a virtual environment (Optional but Recommended):
+   python -m venv venv
+   
+   Activate it:
+   - On Windows: venv\Scripts\activate
+   - On Mac/Linux: source venv/bin/activate
+
+3. Install the required dependencies:
+   pip install -r requirements.txt
+
+4. Start the Flask server:
+   python Backend\app.py
+
+5. Success! The server will now be running at:
+   http://127.0.0.1:5000
+
+
+---------------------------------------------------
+HOW TO RUN THE FRONTEND APP
+---------------------------------------------------
+Method 1 (Easiest):
+1. Simply go to your `Frontend` folder.
+2. Double-click the `index.html` file.
+3. It will open in your default browser (Chrome, Edge, etc.) and you can interact with it!
+
+Method 2 (Using a Python Local Server):
+1. Open a *NEW* terminal window.
+2. Navigate to the project folder:
+   cd path\to\CognitoX.ai
+3. Run this command to serve the frontend:
+   python -m http.server 8000
+4. Open your browser and go to:
+   http://localhost:8000/Frontend/index.html
+
+---------------------------------------------------
+Adding your Machine Learning Model:
+---------------------------------------------------
+1. Place your trained `.pkl` file inside the `Backend\models\` folder.
+2. Name it `learning_ability_model.pkl`.
+3. If no file is present, a dummy model is automatically used for testing.
+
+CI/CD Pipeline:
+---------------
+This project includes a GitHub Actions workflow in `.github/workflows/ci-cd.yml`.
+When you push code to the `main` or `master` branch, it will automatically:
+- Setup a Python environment.
+- Install the dependencies from `requirements.txt`.
+- Run tests located in `Backend/tests/test_app.py`.

@@ -1,0 +1,7 @@
+Flask==3.0.0
+scikit-learn==1.8.0
+numpy
+pytest==7.4.3
+gunicorn==21.2.0
+flask-cors==4.0.0
+PyJWT==2.8.0

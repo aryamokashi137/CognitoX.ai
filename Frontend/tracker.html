@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tracker page</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <a href="index.html#home" style="font-size: 28px; color: rgb(255, 255, 255); font-weight: 700; display: flex; align-items: center; gap: 8px;"> <i class="fa-solid fa-head-side-virus"></i>CognitoX.ai</a>
+            <a href="index.html#home" class="nav-link"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="index.html#how-it-works" class="nav-link"><i class="fa-solid fa-gear"></i> How It Works</a>
+            <a href="index.html#features" class="nav-link"><i class="fa-solid fa-book-open"></i> Features</a>
+            <a href="questionaire.html" class="nav-btn"><i class="fa-solid fa-circle-question"></i> Questionaire</a>
+            <a href="dashboard.html" class="nav-btn"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <a href="tracker.html" class="nav-btn"><i class="fa-solid fa-chart-column"></i> Tracker</a>
+            <div id="nav-auth-container">
+                <a href="signup.html" id="sign-up-link" class="nav-link"><i class="fa-solid fa-arrow-right-to-bracket"></i> SignUp</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="tracker" id="tracker-page">
+        <section class="dashboard-header">
+            <div>
+                <h1 style="color: black;">Habit Tracker</h1>
+                <p>Your personalized habit tracker</p>
+            </div>
+        </section>
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="icon"><i class="fa-solid fa-fire"></i></div>
+                <div class="value" id="streak">0</div>
+                <div class="label">Day Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fa-solid fa-square-check"></i></div>
+                <div class="value" id="completion">0%</div>
+                <div class="label">Completion Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                <div class="value" id="habitCount">0</div>
+                <div class="label">Total Habits</div>
+            </div>
+        </div>
+
+        <div class="header">
+            <div class="month-control">
+                <button id="prevMonth"><i class="fas fa-chevron-left"></i> Previous</button>
+                <span id="monthLabel">January 2026</span>
+                <button id="nextMonth">Next <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Add Habit -->
+        <div class="add-habit-section">
+            <div class="add-habit-form">
+                <input type="text" id="habitInput" placeholder="Enter a new habit (e.g., Morning Meditation, Gym Workout)">
+                <button id="addHabitBtn"><i class="fas fa-plus"></i> Add Habit</button>
+            </div>
+        </div>
+
+        <!-- Habit Grid -->
+        <div class="habit-grid-section">
+            <table class="habit-table">
+                <thead>
+                    <tr id="tableHeader">
+                        <th>Habit Name</th>
+                    </tr>
+                </thead>
+                <tbody id="habitBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h2><i class="fas fa-chart-pie"></i> Habit Completion Overview</h2>
+                <div class="chart-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h2><i class="fas fa-chart-bar"></i> Daily Progress</h2>
+                <div class="chart-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="foot">
+            <div class="footer-container">
+            <div class="footer-brand">
+            <p style="font-size: 30px;"><strong>CognitoX.ai</strong></p>
+            <p class="footer-tagline">Identify Learning Patterns using AI</p>
+        </div>
+        <nav class="footer-links">
+            <a href="index.html#home">Home</a>  
+            <a href="index.html#how-it-works">How It Works</a>
+            <a href="index.html#features">Features</a>
+            <a href="questionaire.html">Questionaire</a>
+        </nav>
+            <div class="footer-meta">
+            <p>© 2026 CognitoX.ai. All rights reserved.</p>
+        </div>
+    </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
