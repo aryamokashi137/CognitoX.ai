@@ -1,5 +1,0 @@
-outs:
-- md5: 923eb1cdb822f4e1d5c583e780b5edd3
-  size: 28401355
-  hash: md5
-  path: learning_ability_model.pkl
