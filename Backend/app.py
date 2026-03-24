@@ -5,14 +5,47 @@ import numpy as np
 import sqlite3
 import jwt
 import datetime
+from google import genai
+from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, g, send_from_directory
 from flask_cors import CORS
 
+# Load environment variables from .env file
+load_dotenv()
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend integration
-app.config['SECRET_KEY'] = 'cognitox_secret_key_123'  # Change this in production
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cognitox_secret_key_123') 
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+# Initialize the Gemini Client if key is available
+client = None
+if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
+    try:
+        # Initialize client with v1 for stability
+        client = genai.Client(api_key=GEMINI_API_KEY, http_options={'api_version': 'v1'})
+        print("GenAI Client initialized successfully (v1).")
+        
+        # List available models and find working ones (Trust the list!)
+        print("--- Available Models ---")
+        available_model_names = []
+        for m in client.models.list():
+            # Simply use the model name if it's a Gemini model
+            if 'gemini' in m.name.lower():
+                available_model_names.append(m.name)
+                print(f" - ✅ {m.name}")
+        
+        # If the list is somehow empty, add standard defaults as fallbacks
+        if not available_model_names:
+            available_model_names = ['models/gemini-2.0-flash', 'models/gemini-1.5-flash']
+            
+        # Save the list for later use
+        app.config['AVAILABLE_MODELS'] = available_model_names
+        print("------------------------")
+    except Exception as e:
+        print(f"Error initializing GenAI Client or listing models: {e}")
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
 def init_db():
@@ -76,7 +109,7 @@ def token_required(f):
         try:
             token = token.split(" ")[1] if " " in token else token
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            request.user_id = data['user_id']
+            g.user_id = data['user_id']
         except Exception as e:
             return jsonify({'error': 'Token is invalid!'}), 401
             
@@ -154,11 +187,94 @@ def get_dashboard():
     """Retrieve history of predictions for the currently logged-in user."""
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT learning_ability, recommended_strategy, timestamp, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC", (request.user_id,))
+        cursor.execute("SELECT learning_ability, recommended_strategy, timestamp, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC", (g.user_id,))
         predictions = cursor.fetchall()
         
     history = [{"learning_ability": p[0], "strategy": p[1], "timestamp": p[2], "features": json.loads(p[3]) if p[3] else None} for p in predictions]
     return jsonify({'history': history}), 200
+
+@app.route('/api/ai/deep-dive', methods=['GET'])
+@token_required
+def get_ai_deep_dive():
+    """Generates a personalized deep-dive for the user's latest strategy using Gemini."""
+    import traceback
+    if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+        return jsonify({
+            "error": "Gemini API key is not configured.",
+            "message": "To enable this feature, please add a valid GEMINI_API_KEY to the Backend/.env file."
+        }), 501
+
+    try:
+        print(f"DEBUG: Starting Deep Dive for User ID: {g.user_id}")
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT learning_ability, recommended_strategy, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1", (g.user_id,))
+            latest = cursor.fetchone()
+            
+        if not latest:
+            print("DEBUG: No profile found for user.")
+            return jsonify({"error": "No learning profile found. Please take the questionnaire first."}), 404
+            
+        ability, strategy, features_json = latest
+        
+        # Simple context for the prompt
+        prompt = f"""
+        User Learning Profile:
+        - Predicted Ability: {ability}
+        - Recommended Strategy: {strategy}
+        
+        The user took a 12-question questionnaire. Based on their answers, the ML model assigned this strategy.
+        Please provide a 'Deep Dive' guide to the student.
+        1. Explain in 2-3 sentences WHY this strategy ({strategy}) is perfect for a {ability}.
+        2. Give 3 actionable, concrete 'Today's Steps' they can take to apply this strategy.
+        
+        Keep the tone encouraging, professional, and concise. Use Markdown formatting.
+        """
+        
+        # Dynamically try ALL available models from the detected list
+        available = app.config.get('AVAILABLE_MODELS', ['models/gemini-2.0-flash', 'models/gemini-1.5-flash'])
+        explanation = None
+        used_model = None
+        
+        for model_name in available:
+            try:
+                print(f"DEBUG: Trying model {model_name}...")
+                response = client.models.generate_content(model=model_name, contents=prompt)
+                explanation = response.text
+                used_model = model_name
+                break # Found one!
+            except Exception as e:
+                error_msg = str(e)
+                print(f"DEBUG: {model_name} failed: {error_msg}")
+                
+                # If it's a quota issue (429), it's highly likely to affect all models
+                # So we stop trying and inform the user immediately.
+                if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                    return jsonify({
+                        "error": "AI Quota Exhausted",
+                        "message": "Your Gemini API key has exceeded its daily/per-minute quota. Please try again in a few minutes or check your usage at https://aistudio.google.com/."
+                    }), 429
+                
+                continue
+        
+        if not explanation:
+            return jsonify({
+                "error": "Deep Dive unavailable",
+                "message": "All available AI models failed to generate content. Please ensure your API key is valid and has not exceeded its limits."
+            }), 503
+            
+        print(f"DEBUG: AI Generation successful using {used_model}.")
+        return jsonify({
+            "status": "success",
+            "explanation": explanation,
+            "strategy": strategy,
+            "ability": ability
+        }), 200
+        
+    except Exception as e:
+        print("DEBUG: Exception in get_ai_deep_dive:")
+        traceback.print_exc()
+        return jsonify({"error": f"AI generation failed: {str(e)}"}), 500
 
 @app.route('/api/habits', methods=['GET', 'POST', 'DELETE'])
 @token_required

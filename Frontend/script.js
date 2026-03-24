@@ -789,7 +789,76 @@ document.addEventListener("DOMContentLoaded", function () {
         if (e.target == popup) {
             popup.style.display = "none";
         }
+        if (e.target == document.getElementById("ai-deep-dive-modal")) {
+            document.getElementById("ai-deep-dive-modal").style.display = "none";
+        }
     });
+
+    const aiDeepDiveBtn = document.getElementById("ai-deep-dive-btn");
+    const aiModal = document.getElementById("ai-deep-dive-modal");
+    const closeAiBtn = document.getElementById("close-ai-modal");
+
+    if (aiDeepDiveBtn) {
+        aiDeepDiveBtn.addEventListener("click", openAIDeepDive);
+    }
+    if (closeAiBtn) {
+        closeAiBtn.addEventListener("click", () => aiModal.style.display = "none");
+    }
+
+    async function openAIDeepDive() {
+        const token = localStorage.getItem('authToken');
+        aiModal.style.display = "flex";
+        
+        const loading = document.getElementById("ai-loading");
+        const contentArea = document.getElementById("ai-content-area");
+        
+        loading.style.display = "block";
+        contentArea.innerHTML = "";
+        
+        try {
+            const res = await fetch("http://localhost:5000/api/ai/deep-dive", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            
+            loading.style.display = "none";
+            
+            if (res.ok) {
+                // Basic Markdown-to-HTML conversion for a nicer look
+                const html = data.explanation
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+                    .replace(/\n\* (.*?)\n/g, '<li>$1</li>')
+                    .replace(/\n\d\. (.*?)\n/g, '<li>$1</li>')
+                    .replace(/\n/g, '<br>');
+                
+                contentArea.innerHTML = `
+                    <div style="color: #333; line-height: 1.6; font-size: 16px;">
+                        ${html}
+                    </div>
+                    <button onclick="document.getElementById('ai-deep-dive-modal').style.display='none'" 
+                            class="nav-btn" style="margin-top: 25px; width: 100%;">Got it!</button>
+                `;
+            } else {
+                let errorTitle = "Setup Required";
+                if (res.status === 429) errorTitle = "Quota Limit Reached";
+                else if (res.status === 501) errorTitle = "Feature Not Configured";
+                else if (res.status >= 500) errorTitle = "AI Service Unavailable";
+
+                contentArea.innerHTML = `
+                    <div style="color: #6b21a8; background: #f3e8ff; padding: 20px; border-radius: 12px; border: 1px solid #d8b4fe;">
+                        <h4 style="margin-bottom: 10px;">${errorTitle}</h4>
+                        <p>${data.message || data.error}</p>
+                        <button onclick="document.getElementById('ai-deep-dive-modal').style.display='none'" 
+                                class="nav-btn" style="margin-top: 15px; width: 100%; background: #6b21a8;">Close</button>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            loading.style.display = "none";
+            contentArea.innerHTML = "<p style='color: red;'>Error connecting to AI service. Ensure backend is running.</p>";
+        }
+    }
 
     if (profilePicUpload) {
         profilePicUpload.addEventListener("change", function () {

@@ -81,6 +81,21 @@
         </div>
     </div>
 
+    <!-- AI Deep Dive Modal -->
+    <div id="ai-deep-dive-modal" class="popup">
+        <div class="popup-content" style="max-width: 600px; text-align: left;">
+            <span class="close-btn" id="close-ai-modal">&times;</span>
+            <h2 style="color: rgb(9, 107, 104); margin-bottom: 20px;"><i class="fa-solid fa-brain"></i> AI Strategy Deep-Dive</h2>
+            <div id="ai-loading" style="display: none; text-align: center; padding: 40px;">
+                <i class="fa-solid fa-spinner fa-spin(3s)" style="font-size: 40px; color: rgb(9, 107, 104);"></i>
+                <p style="margin-top: 15px;">Consulting CognitoX AI...</p>
+            </div>
+            <div id="ai-content-area">
+                <!-- AI text will appear here -->
+            </div>
+        </div>
+    </div>
+
     <section class="ai-section">
         <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Study Recommendations</h2>
 
@@ -89,8 +104,15 @@
         </div>
 
         <div class="ai-insight">
-            <strong>AI Insight:</strong>
-            You are a dominant <b id="display-insight-ability">Visual Explorer</b>. <span id="display-insight-strategy">You learn best through structured visuals combined with hands-on experimentation.</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1; text-align: left;">
+                    <strong>AI Insight:</strong>
+                    You are a dominant <b id="display-insight-ability">Visual Explorer</b>. <span id="display-insight-strategy">You learn best through structured visuals combined with hands-on experimentation.</span>
+                </div>
+                <button id="ai-deep-dive-btn" class="nav-btn" style="background: white; color: rgb(9, 107, 104); border: none; padding: 10px 20px; font-weight: 700;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Explain & Get Tips
+                </button>
+            </div>
         </div>
     </section>
 

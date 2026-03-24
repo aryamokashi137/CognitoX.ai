@@ -1134,9 +1134,20 @@ a {
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
     width: 90%;
     max-width: 440px;
+    max-height: 85vh;
+    overflow-y: auto;
     position: relative;
     text-align: center;
     border: 4px solid transparent;
+}
+
+/* Custom Scrollbar */
+.popup-content::-webkit-scrollbar {
+    width: 8px;
+}
+.popup-content::-webkit-scrollbar-thumb {
+    background: rgba(9, 107, 104, 0.2);
+    border-radius: 10px;
 }
 
 .popup-content h2 {
