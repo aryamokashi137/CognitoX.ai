@@ -282,7 +282,7 @@ def modify_habits():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         if request.method == 'GET':
-            cursor.execute("SELECT id, name FROM habits WHERE user_id = ?", (request.user_id,))
+            cursor.execute("SELECT id, name FROM habits WHERE user_id = ?", (g.user_id,))
             habits_data = cursor.fetchall()
             
             logs = {}
@@ -299,15 +299,15 @@ def modify_habits():
             data = request.get_json()
             if not data or not data.get('name'):
                 return jsonify({"error": "Name required"}), 400
-            cursor.execute("INSERT INTO habits (user_id, name) VALUES (?, ?)", (request.user_id, data['name']))
+            cursor.execute("INSERT INTO habits (user_id, name) VALUES (?, ?)", (g.user_id, data['name']))
             conn.commit()
             return jsonify({"id": str(cursor.lastrowid), "name": data['name']}), 201
             
         elif request.method == 'DELETE':
             habit_id = request.args.get('id')
             if habit_id:
-                cursor.execute("DELETE FROM habit_logs WHERE habit_id = ? AND habit_id IN (SELECT id FROM habits WHERE user_id = ?)", (habit_id, request.user_id))
-                cursor.execute("DELETE FROM habits WHERE id = ? AND user_id = ?", (habit_id, request.user_id))
+                cursor.execute("DELETE FROM habit_logs WHERE habit_id = ? AND habit_id IN (SELECT id FROM habits WHERE user_id = ?)", (habit_id, g.user_id))
+                cursor.execute("DELETE FROM habits WHERE id = ? AND user_id = ?", (habit_id, g.user_id))
                 conn.commit()
             return jsonify({"status": "deleted"}), 200
 
@@ -320,7 +320,7 @@ def toggle_habit_log():
     
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM habits WHERE id = ? AND user_id = ?", (habit_id, request.user_id))
+        cursor.execute("SELECT id FROM habits WHERE id = ? AND user_id = ?", (habit_id, g.user_id))
         if not cursor.fetchone(): return jsonify({"error": "Unauthorized"}), 403
         
         cursor.execute("SELECT id FROM habit_logs WHERE habit_id = ? AND date_str = ?", (habit_id, date_str))
