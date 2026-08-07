@@ -1,408 +1,404 @@
 import os
 import json
 import pickle
-import numpy as np
-import sqlite3
-import jwt
 import datetime
+import traceback
+import numpy as np
+from typing import List, Optional, Dict
+
+from fastapi import FastAPI, HTTPException, Depends, Request, Response, Security
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from sqlmodel import Field, SQLModel, Session, create_engine, select
 from google import genai
 from dotenv import load_dotenv
-from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, request, jsonify, g, send_from_directory
-from flask_cors import CORS
+import jwt
 
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend integration
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cognitox_secret_key_123') 
+# FastAPI Initialization
+app = FastAPI(title="CognitoX.ai API", description="AI-powered Learning Intelligence API", version="1.0.0")
+
+# CORS Middleware config
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For production, restrict this to specific origins (e.g. localhost:5173)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+SECRET_KEY = os.getenv('SECRET_KEY', 'cognitox_secret_key_123')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Initialize the Gemini Client if key is available
 client = None
+available_models = ["models/gemini-2.0-flash", "models/gemini-1.5-flash"]
+
 if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
     try:
-        # Initialize client with v1 for stability
         client = genai.Client(api_key=GEMINI_API_KEY, http_options={'api_version': 'v1'})
-        print("GenAI Client initialized successfully (v1).")
+        print("FastAPI: GenAI Client initialized successfully.")
         
-        # List available models and find working ones (Trust the list!)
-        print("--- Available Models ---")
-        available_model_names = []
+        # Load available models in background
+        detected_models = []
         for m in client.models.list():
-            # Simply use the model name if it's a Gemini model
             if 'gemini' in m.name.lower():
-                available_model_names.append(m.name)
-                print(f" - ✅ {m.name}")
-        
-        # If the list is somehow empty, add standard defaults as fallbacks
-        if not available_model_names:
-            available_model_names = ['models/gemini-2.0-flash', 'models/gemini-1.5-flash']
-            
-        # Save the list for later use
-        app.config['AVAILABLE_MODELS'] = available_model_names
-        print("------------------------")
+                detected_models.append(m.name)
+        if detected_models:
+            available_models = detected_models
+            print(f"FastAPI: Detected models: {available_models}")
     except Exception as e:
-        print(f"Error initializing GenAI Client or listing models: {e}")
+        print(f"Warning: Gemini initialization failed: {e}")
+
+# Database Configuration with SQLModel
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
+DATABASE_URL = f"sqlite:///{DB_PATH}"
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
+# SQLModel Definitions (Maps exactly to the old SQLite table structures)
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    email: str = Field(unique=True)
+    password: str
+
+class Prediction(SQLModel, table=True):
+    __tablename__ = "predictions"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    learning_ability: str
+    recommended_strategy: str
+    input_features: str
+    timestamp: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
+
+class Habit(SQLModel, table=True):
+    __tablename__ = "habits"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    name: str
+
+class HabitLog(SQLModel, table=True):
+    __tablename__ = "habit_logs"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    habit_id: int = Field(foreign_key="habits.id")
+    date_str: str
+
+# Create Database tables
 def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS predictions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                learning_ability TEXT,
-                recommended_strategy TEXT,
-                input_features TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-            )
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS habits (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                name TEXT NOT NULL,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS habit_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                habit_id INTEGER,
-                date_str TEXT NOT NULL,
-                FOREIGN KEY(habit_id) REFERENCES habits(id)
-            )
-        ''')
-        
-        # Migration: add input_features column if table was previously created without it
-        try:
-            cursor.execute("ALTER TABLE predictions ADD COLUMN input_features TEXT")
-        except sqlite3.OperationalError:
-            pass # Column likely already exists
-            
-        conn.commit()
-
+    SQLModel.metadata.create_all(engine)
+    
 init_db()
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'error': 'Token is missing!'}), 401
-            
-        try:
-            token = token.split(" ")[1] if " " in token else token
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            g.user_id = data['user_id']
-        except Exception as e:
-            return jsonify({'error': 'Token is invalid!'}), 401
-            
-        return f(*args, **kwargs)
-    return decorated
+# DB Session Dependency
+def get_session():
+    with Session(engine) as session:
+        yield session
 
-# Path to the predictive model
+# Security JWT token decoder dependency
+security_bearer = HTTPBearer(auto_error=False)
+
+def get_current_user_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)) -> int:
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authorization credentials missing")
+    
+    token = credentials.credentials
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return data['user_id']
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token is invalid")
+
+# Scikit-learn Model Loader
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'learning_ability_model.pkl')
 
 class DummyModel:
-    """A dummy model for predicting learning ability and strategy if no .pkl is found."""
     def predict(self, features):
         return [["Visual Learner", "Microlearning Strategy"]]
 
-# Load the ML model if it exists, otherwise use a dummy
 if os.path.exists(MODEL_PATH):
     try:
         with open(MODEL_PATH, 'rb') as f:
-            model = pickle.load(f)
-        print(f"Model loaded successfully from {MODEL_PATH}")
+            ml_model = pickle.load(f)
+        print(f"ML Model loaded successfully from {MODEL_PATH}")
     except Exception as e:
-        print(f"Failed to load model from {MODEL_PATH}. Error: {e}")
-        model = DummyModel()
+        print(f"Failed to load model. Error: {e}")
+        ml_model = DummyModel()
 else:
-    model = DummyModel()
-    print("Warning: Model file not found. Using a dummy model for predictions.")
-    print(f"Please place your trained .pkl file at: {MODEL_PATH}")
+    ml_model = DummyModel()
+    print("Warning: ML model not found. Using DummyModel.")
 
-@app.route('/api/health', methods=['GET'])
+# Pydantic Schemas
+class RegisterSchema(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class LoginSchema(BaseModel):
+    username: str
+    password: str
+
+class PredictSchema(BaseModel):
+    features: List[float]
+
+class HabitCreateSchema(BaseModel):
+    name: str
+
+class HabitLogToggleSchema(BaseModel):
+    habit_id: int
+    date_str: str
+
+# API Endpoints
+
+@app.get('/api/health')
 def health_check():
-    """Health check endpoint useful for CI/CD and monitoring."""
-    return jsonify({"status": "healthy", "message": "CognitoX.ai backend is running!"}), 200
+    """Health check endpoint for API monitoring."""
+    return {"status": "healthy", "message": "CognitoX.ai FastAPI backend is running!"}
 
-@app.route('/api/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    if not data or not data.get('username') or not data.get('password') or not data.get('email'):
-        return jsonify({'error': 'Missing required fields (username, email, password)'}), 400
-        
-    hashed_password = generate_password_hash(data['password'])
+@app.post('/api/register', status_code=201)
+def register(data: RegisterSchema, db: Session = Depends(get_session)):
+    """Registers a new student user."""
+    # Check if username or email exists
+    statement = select(User).where((User.username == data.username) | (User.email == data.email))
+    existing_user = db.exec(statement).first()
+    if existing_user:
+        raise HTTPException(status_code=409, detail="Username or email already exists!")
     
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
-                           (data['username'], data['email'], hashed_password))
-            conn.commit()
-        return jsonify({'message': 'User created successfully!'}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Username or email already exists!'}), 409
+    hashed_pwd = generate_password_hash(data.password)
+    new_user = User(username=data.username, email=data.email, password=hashed_pwd)
+    
+    db.add(new_user)
+    db.commit()
+    return {"message": "User created successfully!"}
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'error': 'Username and password required'}), 401
+@app.post('/api/login')
+def login(data: LoginSchema, db: Session = Depends(get_session)):
+    """Authenticates the student credentials and returns a JWT token."""
+    statement = select(User).where(User.username == data.username)
+    user = db.exec(statement).first()
+    
+    if not user or not check_password_hash(user.password, data.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+        
+    token = jwt.encode(
+        {
+            'user_id': user.id, 
+            'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=24)
+        }, 
+        SECRET_KEY, 
+        algorithm="HS256"
+    )
+    return {"token": token, "username": user.username}
 
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, password FROM users WHERE username = ?", (data['username'],))
-        user = cursor.fetchone()
-
-    if not user or not check_password_hash(user[1], data['password']):
-        return jsonify({'error': 'Invalid username or password'}), 401
-
-    # Token expires in 24 hours
-    token = jwt.encode({'user_id': user[0], 'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=24)}, 
-                       app.config['SECRET_KEY'], algorithm="HS256")
-
-    return jsonify({'token': token, 'username': data['username']}), 200
-
-@app.route('/api/dashboard', methods=['GET'])
-@token_required
-def get_dashboard():
+@app.get('/api/dashboard')
+def get_dashboard(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
     """Retrieve history of predictions for the currently logged-in user."""
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT learning_ability, recommended_strategy, timestamp, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC", (g.user_id,))
-        predictions = cursor.fetchall()
-        
-    history = [{"learning_ability": p[0], "strategy": p[1], "timestamp": p[2], "features": json.loads(p[3]) if p[3] else None} for p in predictions]
-    return jsonify({'history': history}), 200
+    statement = select(Prediction).where(Prediction.user_id == user_id).order_by(Prediction.timestamp.desc())
+    predictions = db.exec(statement).all()
+    
+    history = [
+        {
+            "learning_ability": p.learning_ability, 
+            "strategy": p.recommended_strategy, 
+            "timestamp": p.timestamp.isoformat(), 
+            "features": json.loads(p.input_features) if p.input_features else None
+        } 
+        for p in predictions
+    ]
+    return {'history': history}
 
-@app.route('/api/ai/deep-dive', methods=['GET'])
-@token_required
-def get_ai_deep_dive():
+@app.get('/api/ai/deep-dive')
+def get_ai_deep_dive(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
     """Generates a personalized deep-dive for the user's latest strategy using Gemini."""
-    import traceback
-    if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-        return jsonify({
-            "error": "Gemini API key is not configured.",
-            "message": "To enable this feature, please add a valid GEMINI_API_KEY to the Backend/.env file."
-        }), 501
+    if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE" or client is None:
+        raise HTTPException(
+            status_code=501, 
+            detail="Gemini API key is not configured. Add a valid GEMINI_API_KEY to the Backend/.env file."
+        )
 
-    try:
-        print(f"DEBUG: Starting Deep Dive for User ID: {g.user_id}")
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT learning_ability, recommended_strategy, input_features FROM predictions WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1", (g.user_id,))
-            latest = cursor.fetchone()
-            
-        if not latest:
-            print("DEBUG: No profile found for user.")
-            return jsonify({"error": "No learning profile found. Please take the questionnaire first."}), 404
-            
-        ability, strategy, features_json = latest
-        
-        # Simple context for the prompt
-        prompt = f"""
-        User Learning Profile:
-        - Predicted Ability: {ability}
-        - Recommended Strategy: {strategy}
-        
-        The user took a 12-question questionnaire. Based on their answers, the ML model assigned this strategy.
-        Please provide a 'Deep Dive' guide to the student.
-        1. Explain in 2-3 sentences WHY this strategy ({strategy}) is perfect for a {ability}.
-        2. Give 3 actionable, concrete 'Today's Steps' they can take to apply this strategy.
-        
-        Keep the tone encouraging, professional, and concise. Use Markdown formatting.
-        """
-        
-        # Dynamically try ALL available models from the detected list
-        available = app.config.get('AVAILABLE_MODELS', ['models/gemini-2.0-flash', 'models/gemini-1.5-flash'])
-        explanation = None
-        used_model = None
-        
-        for model_name in available:
-            try:
-                print(f"DEBUG: Trying model {model_name}...")
-                response = client.models.generate_content(model=model_name, contents=prompt)
-                explanation = response.text
-                used_model = model_name
-                break # Found one!
-            except Exception as e:
-                error_msg = str(e)
-                print(f"DEBUG: {model_name} failed: {error_msg}")
-                
-                # If it's a quota issue (429), it's highly likely to affect all models
-                # So we stop trying and inform the user immediately.
-                if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                    return jsonify({
-                        "error": "AI Quota Exhausted",
-                        "message": "Your Gemini API key has exceeded its daily/per-minute quota. Please try again in a few minutes or check your usage at https://aistudio.google.com/."
-                    }), 429
-                
-                continue
-        
-        if not explanation:
-            return jsonify({
-                "error": "Deep Dive unavailable",
-                "message": "All available AI models failed to generate content. Please ensure your API key is valid and has not exceeded its limits."
-            }), 503
-            
-        print(f"DEBUG: AI Generation successful using {used_model}.")
-        return jsonify({
-            "status": "success",
-            "explanation": explanation,
-            "strategy": strategy,
-            "ability": ability
-        }), 200
-        
-    except Exception as e:
-        print("DEBUG: Exception in get_ai_deep_dive:")
-        traceback.print_exc()
-        return jsonify({"error": f"AI generation failed: {str(e)}"}), 500
-
-@app.route('/api/habits', methods=['GET', 'POST', 'DELETE'])
-@token_required
-def modify_habits():
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        if request.method == 'GET':
-            cursor.execute("SELECT id, name FROM habits WHERE user_id = ?", (g.user_id,))
-            habits_data = cursor.fetchall()
-            
-            logs = {}
-            for h in habits_data:
-                cursor.execute("SELECT date_str FROM habit_logs WHERE habit_id = ?", (h[0],))
-                logs[str(h[0])] = {date_str[0]: True for date_str in cursor.fetchall()}
-            
-            return jsonify({
-                "habits": [{"id": str(h[0]), "name": h[1]} for h in habits_data],
-                "logs": logs
-            }), 200
-            
-        elif request.method == 'POST':
-            data = request.get_json()
-            if not data or not data.get('name'):
-                return jsonify({"error": "Name required"}), 400
-            cursor.execute("INSERT INTO habits (user_id, name) VALUES (?, ?)", (g.user_id, data['name']))
-            conn.commit()
-            return jsonify({"id": str(cursor.lastrowid), "name": data['name']}), 201
-            
-        elif request.method == 'DELETE':
-            habit_id = request.args.get('id')
-            if habit_id:
-                cursor.execute("DELETE FROM habit_logs WHERE habit_id = ? AND habit_id IN (SELECT id FROM habits WHERE user_id = ?)", (habit_id, g.user_id))
-                cursor.execute("DELETE FROM habits WHERE id = ? AND user_id = ?", (habit_id, g.user_id))
-                conn.commit()
-            return jsonify({"status": "deleted"}), 200
-
-@app.route('/api/habits/log', methods=['POST'])
-@token_required
-def toggle_habit_log():
-    data = request.get_json()
-    habit_id = data.get('habit_id')
-    date_str = data.get('date_str')
+    statement = select(Prediction).where(Prediction.user_id == user_id).order_by(Prediction.timestamp.desc())
+    latest = db.exec(statement).first()
     
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id FROM habits WHERE id = ? AND user_id = ?", (habit_id, g.user_id))
-        if not cursor.fetchone(): return jsonify({"error": "Unauthorized"}), 403
+    if not latest:
+        raise HTTPException(status_code=404, detail="No learning profile found. Please take the questionnaire first.")
         
-        cursor.execute("SELECT id FROM habit_logs WHERE habit_id = ? AND date_str = ?", (habit_id, date_str))
-        log = cursor.fetchone()
-        if log:
-            cursor.execute("DELETE FROM habit_logs WHERE id = ?", (log[0],))
-            status = False
-        else:
-            cursor.execute("INSERT INTO habit_logs (habit_id, date_str) VALUES (?, ?)", (habit_id, date_str))
-            status = True
-        conn.commit()
-    return jsonify({"status": status}), 200
-
-@app.route('/api/predict', methods=['POST'])
-def predict_learning_ability():
+    ability = latest.learning_ability
+    strategy = latest.recommended_strategy
+    
+    prompt = f"""
+    User Learning Profile:
+    - Predicted Ability: {ability}
+    - Recommended Strategy: {strategy}
+    
+    The user took a 12-question questionnaire. Based on their answers, the ML model assigned this strategy.
+    Please provide a 'Deep Dive' guide to the student.
+    1. Explain in 2-3 sentences WHY this strategy ({strategy}) is perfect for a {ability}.
+    2. Give 3 actionable, concrete 'Today's Steps' they can take to apply this strategy.
+    
+    Keep the tone encouraging, professional, and concise. Use Markdown formatting.
     """
-    Endpoint to predict learning ability and strategy based on questionnaire features.
-    Expected JSON payload: {"features": [0.5, 1.2, 3.4, ...]}
-    """
-    data = request.get_json()
     
-    if not data or 'features' not in data:
-        return jsonify({"error": "Missing 'features' in request payload. Please provide a list of numeric features."}), 400
+    explanation = None
+    used_model = None
+    
+    for model_name in available_models:
+        try:
+            print(f"FastAPI: Trying model {model_name}...")
+            response = client.models.generate_content(model=model_name, contents=prompt)
+            explanation = response.text
+            used_model = model_name
+            break
+        except Exception as e:
+            error_msg = str(e)
+            print(f"FastAPI: Model {model_name} failed: {error_msg}")
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Your Gemini API key has exceeded its daily/per-minute quota. Please check your usage."
+                )
+            continue
+            
+    if not explanation:
+        raise HTTPException(status_code=503, detail="All available AI models failed to generate content.")
         
-    features = data.get('features')
+    print(f"FastAPI: AI Deep Dive successful using {used_model}.")
+    return {
+        "status": "success",
+        "explanation": explanation,
+        "strategy": strategy,
+        "ability": ability
+    }
+
+@app.get('/api/habits')
+def get_habits(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
+    """Retrieve all habits and habit logs for the user."""
+    statement = select(Habit).where(Habit.user_id == user_id)
+    habits_list = db.exec(statement).all()
     
-    if not isinstance(features, list) or len(features) != 12:
-        return jsonify({"error": "'features' must be a list of exactly 12 numerical values."}), 400
+    logs = {}
+    for h in habits_list:
+        log_statement = select(HabitLog).where(HabitLog.habit_id == h.id)
+        logs[str(h.id)] = {item.date_str: True for item in db.exec(log_statement).all()}
+        
+    return {
+        "habits": [{"id": str(h.id), "name": h.name} for h in habits_list],
+        "logs": logs
+    }
+
+@app.post('/api/habits', status_code=201)
+def create_habit(data: HabitCreateSchema, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
+    """Creates a new habit for tracking."""
+    new_habit = Habit(user_id=user_id, name=data.name)
+    db.add(new_habit)
+    db.commit()
+    db.refresh(new_habit)
+    return {"id": str(new_habit.id), "name": new_habit.name}
+
+@app.delete('/api/habits')
+def delete_habit(id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
+    """Deletes an existing habit and its associated logged calendar entries."""
+    # Verify ownership
+    habit_stmt = select(Habit).where((Habit.id == id) & (Habit.user_id == user_id))
+    habit = db.exec(habit_stmt).first()
+    if not habit:
+        raise HTTPException(status_code=403, detail="Unauthorized or habit not found")
+        
+    # Delete logs
+    log_stmt = select(HabitLog).where(HabitLog.habit_id == id)
+    for log in db.exec(log_stmt).all():
+        db.delete(log)
+        
+    db.delete(habit)
+    db.commit()
+    return {"status": "deleted"}
+
+@app.post('/api/habits/log')
+def toggle_habit_log(data: HabitLogToggleSchema, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_session)):
+    """Toggles (logs or unlogs) a habit entry for a calendar date."""
+    # Verify ownership
+    habit_stmt = select(Habit).where((Habit.id == data.habit_id) & (Habit.user_id == user_id))
+    habit = db.exec(habit_stmt).first()
+    if not habit:
+        raise HTTPException(status_code=403, detail="Unauthorized or habit not found")
+        
+    # Check if log already exists
+    log_stmt = select(HabitLog).where((HabitLog.habit_id == data.habit_id) & (HabitLog.date_str == data.date_str))
+    log = db.exec(log_stmt).first()
+    
+    if log:
+        db.delete(log)
+        status = False
+    else:
+        new_log = HabitLog(habit_id=data.habit_id, date_str=data.date_str)
+        db.add(new_log)
+        status = True
+        
+    db.commit()
+    return {"status": status}
+
+@app.post('/api/predict')
+def predict_learning_ability(
+    data: PredictSchema, 
+    request: Request,
+    db: Session = Depends(get_session)
+):
+    """
+    Predicts learning ability based on 12 assessment questions.
+    If a valid JWT token is sent, saves the result to user history.
+    """
+    if len(data.features) != 12:
+        raise HTTPException(status_code=400, detail="Exactly 12 numerical features are required")
         
     try:
-        # Convert to numpy array and reshape for real scikit-learn models
-        features_array = np.array(features).reshape(1, -1)
+        features_array = np.array(data.features).reshape(1, -1)
+        prediction = ml_model.predict(features_array)
         
-        # Make the prediction
-        prediction = model.predict(features_array)
-        
-        # Assuming the model returns a 2D array: [['FastLearner', 'Explorer']]
         ability = prediction[0][0] if len(prediction[0]) > 0 else "Unknown Ability"
         strategy = prediction[0][1] if len(prediction[0]) > 1 else "Standard Strategy"
         
-        # Save to database if the user provided a valid auth token
+        # Save to database if auth header is present
         auth_header = request.headers.get('Authorization')
         if auth_header:
             try:
                 token = auth_header.split(" ")[1] if " " in auth_header else auth_header
-                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-                user_id = data['user_id']
+                decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+                user_id = decoded['user_id']
                 
-                with sqlite3.connect(DB_PATH) as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("INSERT INTO predictions (user_id, learning_ability, recommended_strategy, input_features) VALUES (?, ?, ?, ?)", 
-                                   (user_id, str(ability), str(strategy), json.dumps(features)))
-                    conn.commit()
-            except Exception:
-                pass # Silently proceed without saving if token is invalid or missing
-        
-        return jsonify({
+                new_prediction = Prediction(
+                    user_id=user_id,
+                    learning_ability=str(ability),
+                    recommended_strategy=str(strategy),
+                    input_features=json.dumps(data.features)
+                )
+                db.add(new_prediction)
+                db.commit()
+            except Exception as db_err:
+                print(f"FastAPI: Could not save prediction to db: {db_err}")
+                
+        return {
             "status": "success",
             "learning_ability": str(ability),
             "recommended_strategy": str(strategy)
-        }), 200
-        
+        }
     except Exception as e:
-        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
-@app.route('/<path:filename>')
-@app.route('/Frontend/<path:filename>')
-def serve_frontend(filename):
-    """Serve any file from the Frontend directory (like style.css)."""
-    frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'Frontend')
-    return send_from_directory(frontend_dir, filename)
-
-@app.route('/')
-def home():
-    """Redirect or serve the main index.html file when visiting localhost:5000/."""
-    frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'Frontend')
-    return send_from_directory(frontend_dir, 'index.html')
+# Mount static files folder to support legacy directories
+legacy_frontend = os.path.join(os.path.dirname(__file__), '..', 'Frontend')
+if os.path.exists(legacy_frontend):
+    app.mount("/Frontend", StaticFiles(directory=legacy_frontend), name="legacy_frontend")
 
 if __name__ == '__main__':
-    # Ensure the models directory exists
-    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-    
-    # Use environment variable for port or default to 5000
+    import uvicorn
+    # Use environment port or default to 5000
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
