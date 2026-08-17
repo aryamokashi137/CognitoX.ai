@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem('authToken');
@@ -64,6 +66,19 @@ export default function Navbar() {
         </nav>
 
         <div className="navbar-auth">
+          <button 
+            onClick={toggleTheme} 
+            className="theme-toggle-btn" 
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            style={{ marginRight: '16px' }}
+          >
+            {theme === 'dark' ? (
+              <i className="fa-solid fa-sun sun-icon"></i>
+            ) : (
+              <i className="fa-solid fa-moon moon-icon"></i>
+            )}
+          </button>
+
           {token ? (
             <div className="auth-profile-group">
               <div className="user-profile-chip">

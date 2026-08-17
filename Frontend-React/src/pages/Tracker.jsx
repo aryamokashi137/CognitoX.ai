@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
+import { useTheme } from '../context/ThemeContext';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -28,7 +29,9 @@ const MONTH_NAMES = [
 ];
 
 export default function Tracker() {
+  const { theme } = useTheme();
   const token = localStorage.getItem('authToken');
+  const isDark = theme === 'dark';
 
   // Month navigation state
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -38,11 +41,24 @@ export default function Tracker() {
   const [habits, setHabits] = useState([]);
   const [habitLogs, setHabitLogs] = useState({});
   const [newHabitName, setNewHabitName] = useState('');
+  const [newHabitIsPersonalization, setNewHabitIsPersonalization] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load habits on mount & month changes
+  // Decoupled category tab
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'gamification', 'personalization'
+
+  // Research Analytics log state
+  const [analyticsSummary, setAnalyticsSummary] = useState({
+    gamified_interactions_count: 0,
+    personalization_interactions_count: 0,
+    recent_logs: []
+  });
+
+  // Load habits and analytics on mount & month changes
   useEffect(() => {
     fetchHabits();
+    fetchAnalyticsSummary();
+    logInteraction('gamification', 'page_view', 'Loaded Tracker analytics page');
   }, []);
 
   const fetchHabits = async () => {
@@ -64,6 +80,46 @@ export default function Tracker() {
     }
   };
 
+  const fetchAnalyticsSummary = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch('http://localhost:5000/api/analytics/summary', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAnalyticsSummary({
+          gamified_interactions_count: data.gamified_interactions_count,
+          personalization_interactions_count: data.personalization_interactions_count,
+          recent_logs: data.recent_logs || []
+        });
+      }
+    } catch (e) {
+      console.error('Error fetching analytics summary:', e);
+    }
+  };
+
+  const logInteraction = async (trackType, eventType, details) => {
+    if (!token) return;
+    try {
+      await fetch('http://localhost:5000/api/analytics/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          track_type: trackType,
+          event_type: eventType,
+          details: details
+        })
+      });
+      fetchAnalyticsSummary();
+    } catch (e) {
+      console.error('Error logging interaction:', e);
+    }
+  };
+
   const handleAddHabit = async (e) => {
     e.preventDefault();
     const name = newHabitName.trim();
@@ -76,25 +132,40 @@ export default function Tracker() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ 
+          name,
+          is_personalization: newHabitIsPersonalization
+        })
       });
       
       const data = await res.json();
       if (res.ok) {
-        setHabits([...habits, { id: data.id, name: data.name }]);
+        setHabits([...habits, { 
+          id: data.id, 
+          name: data.name,
+          is_personalization: data.is_personalization 
+        }]);
         setHabitLogs({
           ...habitLogs,
           [data.id]: {}
         });
         setNewHabitName('');
+        logInteraction(
+          data.is_personalization ? 'personalization' : 'gamification',
+          'create_quest',
+          `Created quest/habit: "${data.name}"`
+        );
       }
     } catch (err) {
-      console.error('Error adding habit:', err);
+      console.error('Error adding quest/habit:', err);
     }
   };
 
   const handleDeleteHabit = async (habitId) => {
     if (!token) return;
+    const targetHabit = habits.find(h => String(h.id) === String(habitId));
+    const track = targetHabit?.is_personalization ? 'personalization' : 'gamification';
+
     try {
       const res = await fetch(`http://localhost:5000/api/habits?id=${habitId}`, {
         method: 'DELETE',
@@ -106,6 +177,12 @@ export default function Tracker() {
         const updatedLogs = { ...habitLogs };
         delete updatedLogs[habitId];
         setHabitLogs(updatedLogs);
+        
+        logInteraction(
+          track,
+          'delete_quest',
+          `Deleted quest/habit: "${targetHabit?.name || habitId}"`
+        );
       }
     } catch (err) {
       console.error('Error deleting habit:', err);
@@ -114,7 +191,9 @@ export default function Tracker() {
 
   const handleToggleHabit = async (habitId, day) => {
     const key = `${currentYear}-${currentMonth}-${day}`;
-    
+    const targetHabit = habits.find(h => String(h.id) === String(habitId));
+    const track = targetHabit?.is_personalization ? 'personalization' : 'gamification';
+
     // Optimistic local state update
     const currentHabitLogs = habitLogs[habitId] || {};
     const isChecked = !!currentHabitLogs[key];
@@ -138,6 +217,11 @@ export default function Tracker() {
           },
           body: JSON.stringify({ habit_id: habitId, date_str: key })
         });
+        logInteraction(
+          track,
+          isChecked ? 'uncheck' : 'check',
+          `${isChecked ? 'Removed log entry' : 'Completed log entry'} for "${targetHabit?.name}" on day ${day}`
+        );
       } catch (err) {
         console.error('Error logging habit toggle:', err);
         // Revert local state on error
@@ -166,6 +250,7 @@ export default function Tracker() {
 
     setCurrentMonth(nextMonth);
     setCurrentYear(nextYear);
+    logInteraction('gamification', 'change_month', `Navigated calendar to ${MONTH_NAMES[nextMonth]} ${nextYear}`);
   };
 
   const getDaysInMonth = () => {
@@ -178,17 +263,24 @@ export default function Tracker() {
   const totalPossibleLogs = totalHabits * totalDays;
   
   let completedLogsCount = 0;
+  let gamifiedCompletedCount = 0;
+  let personalizationCompletedCount = 0;
+
   habits.forEach(habit => {
     const logsForHabit = habitLogs[habit.id] || {};
     for (let day = 1; day <= totalDays; day++) {
       const key = `${currentYear}-${currentMonth}-${day}`;
-      if (logsForHabit[key]) completedLogsCount++;
+      if (logsForHabit[key]) {
+        completedLogsCount++;
+        if (habit.is_personalization) personalizationCompletedCount++;
+        else gamifiedCompletedCount++;
+      }
     }
   });
 
   const completionRate = totalPossibleLogs > 0 ? Math.round((completedLogsCount / totalPossibleLogs) * 100) : 0;
 
-  // Calculate current streak (consecutive days from today backward where all active habits were checked)
+  // Calculate current streak
   const getStreak = () => {
     const today = new Date();
     let streakCount = 0;
@@ -197,7 +289,6 @@ export default function Tracker() {
       for (let day = today.getDate(); day >= 1; day--) {
         let allCompleted = true;
         
-        // If there are no habits, streak is 0
         if (habits.length === 0) {
           allCompleted = false;
         } else {
@@ -221,13 +312,27 @@ export default function Tracker() {
 
   const streak = getStreak();
 
+  // Gamification HUD calculations
+  // Gamified Habits = 10 XP, Personalized Quests = 25 XP
+  const totalXP = (gamifiedCompletedCount * 10) + (personalizationCompletedCount * 25);
+  const level = Math.floor(totalXP / 100) + 1;
+  const levelXP = totalXP % 100;
+  
+  const getRankName = (lvl) => {
+    if (lvl >= 10) return "Omnipresent Sage 🌌";
+    if (lvl >= 7) return "Deep Work Master 🧠";
+    if (lvl >= 5) return "Flow State Pioneer ⚡";
+    if (lvl >= 3) return "Consistency Athlete 🏃";
+    return "Apprentice Scholar 📚";
+  };
+
   // Pie Chart config
   const pieData = {
-    labels: ['Completed Logs', 'Remaining Logs'],
+    labels: ['Completed Quests & Habits', 'Remaining'],
     datasets: [{
       data: [completedLogsCount, Math.max(0, totalPossibleLogs - completedLogsCount)],
-      backgroundColor: ['#14b8a6', 'rgba(255, 255, 255, 0.05)'],
-      borderColor: ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.1)'],
+      backgroundColor: ['#14b8a6', isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'],
+      borderColor: [isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'],
       borderWidth: 1
     }]
   };
@@ -237,7 +342,7 @@ export default function Tracker() {
       legend: {
         position: 'bottom',
         labels: {
-          color: '#f8fafc',
+          color: isDark ? '#f8fafc' : '#0f172a',
           font: { family: 'Outfit', size: 13 }
         }
       }
@@ -245,45 +350,33 @@ export default function Tracker() {
     maintainAspectRatio: false
   };
 
-  // Bar Chart config (completed logs per day of the month)
-  const dailyCompletedData = [];
-  const barLabels = [];
-  for (let day = 1; day <= totalDays; day++) {
-    let completedCount = 0;
-    habits.forEach(habit => {
-      const key = `${currentYear}-${currentMonth}-${day}`;
-      if (habitLogs[habit.id]?.[key]) completedCount++;
-    });
-    dailyCompletedData.push(completedCount);
-    barLabels.push(String(day));
-  }
-
-  const barData = {
-    labels: barLabels,
+  // Decoupled Analytics Bar Chart config
+  const comparisonBarData = {
+    labels: ['Gamified Habits 🎮', 'AI Quests 🧠'],
     datasets: [{
-      label: 'Habits Completed',
-      data: dailyCompletedData,
-      backgroundColor: 'rgba(99, 102, 241, 0.65)',
-      borderColor: '#6366f1',
+      label: 'Logged Check-Ins',
+      data: [gamifiedCompletedCount, personalizationCompletedCount],
+      backgroundColor: ['rgba(20, 184, 166, 0.65)', 'rgba(139, 92, 246, 0.65)'],
+      borderColor: ['#14b8a6', '#8b5cf6'],
       borderWidth: 1.5,
       borderRadius: 4
     }]
   };
 
-  const barOptions = {
+  const comparisonBarOptions = {
     scales: {
       y: {
         beginAtZero: true,
         ticks: { 
-          stepSize: 1, 
-          color: '#94a3b8',
+          stepSize: 2, 
+          color: isDark ? '#94a3b8' : '#475569',
           font: { family: 'Plus Jakarta Sans', size: 10 } 
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)' }
+        grid: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)' }
       },
       x: {
         ticks: { 
-          color: '#94a3b8',
+          color: isDark ? '#94a3b8' : '#475569',
           font: { family: 'Plus Jakarta Sans', size: 10 } 
         },
         grid: { display: false }
@@ -295,24 +388,62 @@ export default function Tracker() {
     maintainAspectRatio: false
   };
 
-  // Render day numbers for Table headers
+  // Filtering habits based on the active tab
+  const filteredHabits = habits.filter(h => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'gamification') return !h.is_personalization;
+    if (activeTab === 'personalization') return h.is_personalization;
+    return true;
+  });
+
   const dayHeaders = [];
   for (let d = 1; d <= totalDays; d++) {
     dayHeaders.push(d);
   }
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    logInteraction(
+      tab === 'all' ? 'gamification' : tab,
+      'tab_switch',
+      `Switched quest view category to: "${tab}"`
+    );
+  };
+
   return (
     <div className="tracker-page animate-fade-in">
       <header className="dashboard-header-container">
         <div className="header-text-group">
-          <h1>Habit Tracker</h1>
-          <p>Optimize consistency by logging daily learning activities</p>
+          <h1>Quest & Habit Tracker</h1>
+          <p>Decoupled evaluation of gamified incentives versus AI-personalized curriculum quests</p>
         </div>
       </header>
 
+      {/* Gamified HUD Progress Bar Card */}
+      <section className="glass-card quest-hud-card">
+        <div className="hud-header">
+          <div className="hud-rank-info">
+            <span className="scholar-rank-badge">{getRankName(level)}</span>
+            <span className="level-badge">LEVEL {level}</span>
+          </div>
+          <div className="hud-xp-details">
+            <span>{totalXP} Total XP</span>
+            <span className="xp-gain-rates">(🎮 Habit: +10 XP | 🧠 AI Quest: +25 XP)</span>
+          </div>
+        </div>
+        <div className="hud-xp-progress-bar-container">
+          <div className="hud-xp-progress-bar-fill" style={{ width: `${levelXP}%` }}>
+            <span className="xp-floating-label">{levelXP} / 100 XP</span>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Cards Section */}
       <section className="tracker-stats-grid">
-        <div className="glass-card stat-card-node">
+        <div 
+          className="glass-card stat-card-node clickable-stat"
+          onMouseEnter={() => logInteraction('gamification', 'hover', 'Hovered over streak dashboard node')}
+        >
           <div className="stat-icon-wrapper color-orange">
             <i className="fa-solid fa-fire"></i>
           </div>
@@ -322,7 +453,10 @@ export default function Tracker() {
           </div>
         </div>
 
-        <div className="glass-card stat-card-node">
+        <div 
+          className="glass-card stat-card-node clickable-stat"
+          onMouseEnter={() => logInteraction('personalization', 'hover', 'Hovered over AI Quest completion metric')}
+        >
           <div className="stat-icon-wrapper color-teal">
             <i className="fa-solid fa-square-check"></i>
           </div>
@@ -338,10 +472,34 @@ export default function Tracker() {
           </div>
           <div className="stat-node-values">
             <h2>{totalHabits}</h2>
-            <p>Active Habits</p>
+            <p>Active Quests</p>
           </div>
         </div>
       </section>
+
+      {/* Decoupled Track Navigation Tabs */}
+      <div className="track-navigation-tabs-row">
+        <div className="quest-tabs-container">
+          <button 
+            onClick={() => handleTabChange('all')} 
+            className={`quest-tab-btn ${activeTab === 'all' ? 'active-quest-tab' : ''}`}
+          >
+            📋 All Activities ({habits.length})
+          </button>
+          <button 
+            onClick={() => handleTabChange('gamification')} 
+            className={`quest-tab-btn ${activeTab === 'gamification' ? 'active-quest-tab' : ''}`}
+          >
+            🎮 Gamified Habits ({habits.filter(h => !h.is_personalization).length})
+          </button>
+          <button 
+            onClick={() => handleTabChange('personalization')} 
+            className={`quest-tab-btn ${activeTab === 'personalization' ? 'active-quest-tab' : ''}`}
+          >
+            🧠 AI Personalized Quests ({habits.filter(h => h.is_personalization).length})
+          </button>
+        </div>
+      </div>
 
       {/* Month Control & Add Habit Section */}
       <div className="tracker-forms-row">
@@ -359,14 +517,28 @@ export default function Tracker() {
           <form onSubmit={handleAddHabit} className="add-habit-inline-form">
             <input
               type="text"
-              placeholder="Enter a new habit (e.g. Solve LeetCode, Read Docs)"
+              placeholder={newHabitIsPersonalization ? "Enter AI Quest (e.g. Solve Spaced Repetition quiz)" : "Enter standard habit (e.g. Drink 2L water, Gym)"}
               value={newHabitName}
               onChange={(e) => setNewHabitName(e.target.value)}
               className="input-glass"
               required
             />
+            <div className="inline-checkbox-label">
+              <label className="custom-checkbox-container label-text-xs">
+                <input
+                  type="checkbox"
+                  checked={newHabitIsPersonalization}
+                  onChange={(e) => {
+                    setNewHabitIsPersonalization(e.target.checked);
+                    logInteraction('personalization', 'click', `Toggled Create category to ${e.target.checked ? 'AI Quest' : 'Gamified Habit'}`);
+                  }}
+                />
+                <span className="checkbox-checkmark"></span>
+                <span className="label-words">AI Quest 🧠</span>
+              </label>
+            </div>
             <button type="submit" className="btn-primary">
-              <i className="fa-solid fa-plus"></i> Add Habit
+              <i className="fa-solid fa-plus"></i> Add
             </button>
           </form>
         </div>
@@ -377,35 +549,40 @@ export default function Tracker() {
         {loading ? (
           <div className="grid-loading-box">
             <i className="fa-solid fa-spinner fa-spin loader-icon"></i>
-            <p>Loading habit scheduler...</p>
+            <p>Loading activities...</p>
           </div>
-        ) : habits.length === 0 ? (
+        ) : filteredHabits.length === 0 ? (
           <div className="empty-tracker-state">
             <i className="fa-solid fa-calendar-xmark empty-icon"></i>
-            <h3>No Habits Programmed</h3>
-            <p>Add some study habits above to start tracking your daily progress.</p>
+            <h3>No Tasks Found</h3>
+            <p>Add some study quests or standard habits to begin logs in this track.</p>
           </div>
         ) : (
           <div className="calendar-table-responsive">
             <table className="habit-calendar-table">
               <thead>
                 <tr>
-                  <th>Habit Name</th>
+                  <th>Quest / Habit Name</th>
                   {dayHeaders.map(day => (
                     <th key={day} className="day-num-th">{day}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {habits.map(habit => (
-                  <tr key={habit.id}>
+                {filteredHabits.map(habit => (
+                  <tr key={habit.id} className={habit.is_personalization ? 'row-personalization-quest' : 'row-gamified-habit'}>
                     <td className="habit-name-cell">
                       <div className="habit-cell-wrapper">
-                        <span className="habit-title-text">{habit.name}</span>
+                        <div className="habit-title-container">
+                          <span className="habit-title-text">{habit.name}</span>
+                          <span className={`quest-track-pill ${habit.is_personalization ? 'pill-personalization' : 'pill-gamification'}`}>
+                            {habit.is_personalization ? 'AI Quest 🧠' : 'Habit 🎮'}
+                          </span>
+                        </div>
                         <button 
                           onClick={() => handleDeleteHabit(habit.id)} 
                           className="delete-habit-btn" 
-                          title="Delete Habit"
+                          title="Delete"
                         >
                           <i className="fa-solid fa-trash-can"></i>
                         </button>
@@ -435,20 +612,66 @@ export default function Tracker() {
         )}
       </section>
 
-      {/* Habit Metrics & Progress Charts */}
+      {/* Decoupled scientific charts & live research log feed */}
       {habits.length > 0 && (
-        <section className="tracker-charts-row">
+        <section className="tracker-charts-row grid-decoupled-analytics">
           <div className="glass-card tracker-chart-container">
-            <h3><i className="fa-solid fa-chart-pie color-teal-glow"></i> Habit Completion Overview</h3>
+            <h3><i className="fa-solid fa-chart-pie color-teal-glow"></i> Overall Completion</h3>
             <div className="chart-wrapper-box">
               <Pie data={pieData} options={pieOptions} />
             </div>
           </div>
 
           <div className="glass-card tracker-chart-container">
-            <h3><i className="fa-solid fa-chart-bar color-indigo-glow"></i> Daily Progress</h3>
+            <h3><i className="fa-solid fa-chart-bar color-indigo-glow"></i> Gamification vs. AI Quests</h3>
             <div className="chart-wrapper-box">
-              <Bar data={barData} options={barOptions} />
+              <Bar data={comparisonBarData} options={comparisonBarOptions} />
+            </div>
+          </div>
+
+          {/* Research analytics live log feed */}
+          <div className="glass-card tracker-chart-container full-width-grid-card">
+            <div className="analytics-header">
+              <h3><i className="fa-solid fa-satellite-dish text-teal-glow"></i> Scientific Telemetry: Gamification vs. AI Curriculum Analytics</h3>
+              <div className="telemetry-badge-scores">
+                <span className="track-score-badge bg-gamified-badge">🎮 Habits Clicks: {analyticsSummary.gamified_interactions_count}</span>
+                <span className="track-score-badge bg-personalized-badge">🧠 Quest Clicks: {analyticsSummary.personalization_interactions_count}</span>
+              </div>
+            </div>
+            <p className="scientific-description-p">
+              This terminal decodes live database interaction metrics to study if students engage more with standard gamified triggers (badges, basic routines) or the custom AI-personalized study recommendations.
+            </p>
+            <div className="telemetry-log-table-wrapper">
+              <table className="telemetry-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Track Category</th>
+                    <th>Event Logged</th>
+                    <th>Activity Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analyticsSummary.recent_logs.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="text-center-cell">No telemetry events logged yet. Check or hover over elements to record telemetry.</td>
+                    </tr>
+                  ) : (
+                    analyticsSummary.recent_logs.map((log, idx) => (
+                      <tr key={idx} className={log.track_type === 'personalization' ? 'telemetry-row-personalization' : 'telemetry-row-gamification'}>
+                        <td className="telemetry-time-td">{new Date(log.timestamp).toLocaleTimeString()}</td>
+                        <td className="telemetry-category-td">
+                          <span className={`telemetry-pill ${log.track_type === 'personalization' ? 'pill-purple' : 'pill-teal'}`}>
+                            {log.track_type.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="telemetry-event-td"><code>{log.event_type}</code></td>
+                        <td className="telemetry-detail-td">{log.details}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>

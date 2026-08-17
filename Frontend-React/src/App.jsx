@@ -8,13 +8,15 @@ import Signup from './pages/Signup';
 import Questionnaire from './pages/Questionnaire';
 import Dashboard from './pages/Dashboard';
 import Tracker from './pages/Tracker';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 export default function App() {
   return (
-    <Router>
-      <div className="app-layout">
-        <Navbar />
+    <ThemeProvider>
+      <Router>
+        <div className="app-layout">
+          <Navbar />
         <main className="main-content-flow">
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -53,5 +55,6 @@ export default function App() {
         <Footer />
       </div>
     </Router>
+  </ThemeProvider>
   );
 }

@@ -3,62 +3,69 @@ CognitoX.ai - Setup and Run Instructions
 ===================================================
 
 This project consists of two parts:
-1. The Backend (Flask + SQLite Server)
-2. The Frontend (HTML/JS/CSS Browser interface)
+1. The Backend (FastAPI + SQLModel SQLite Server)
+2. The Frontend (React Single Page App)
 
-Both need to be running for the full experience.
+Both need to be running for the full experience. You can run them in VS Code, Cursor, PyCharm, WebStorm, or any command-line terminal of your choice.
 
 ---------------------------------------------------
-HOW TO RUN THE BACKEND SERVER
+HOW TO RUN THE BACKEND SERVER (FastAPI)
 ---------------------------------------------------
-1. Open a terminal (Command Prompt or PowerShell) and navigate to the project folder:
-   cd path\to\CognitoX.ai
+1. Open a terminal and navigate to the project root folder:
+   cd CognitoX.ai
 
-2. Create a virtual environment (Optional but Recommended):
-   python -m venv venv
-   
-   Activate it:
-   - On Windows: venv\Scripts\activate
-   - On Mac/Linux: source venv/bin/activate
+2. Create a virtual environment:
+   - On Windows (CMD/PowerShell):
+     python -m venv venv
+     venv\Scripts\activate
+   - On Mac/Linux (Terminal):
+     python3 -m venv venv
+     source venv/bin/activate
 
-3. Install the required dependencies:
+3. Install the required Python dependencies:
    pip install -r requirements.txt
 
-4. Start the Flask server:
-   python Backend\app.py
+4. Configure Environment Variables:
+   Ensure there is a `.env` file inside the `Backend/` directory with the following keys:
+   GEMINI_API_KEY=your_actual_gemini_api_key
+   SECRET_KEY=cognitox_secret_key_123
 
-5. Success! The server will now be running at:
-   http://127.0.0.1:5000
+5. Start the FastAPI server:
+   python Backend/app.py
+
+6. Success! The backend server will be running at:
+   http://localhost:5000
 
 
 ---------------------------------------------------
-HOW TO RUN THE FRONTEND APP
+HOW TO RUN THE FRONTEND APP (React Vite)
 ---------------------------------------------------
-Method 1 (Easiest):
-1. Simply go to your `Frontend` folder.
-2. Double-click the `index.html` file.
-3. It will open in your default browser (Chrome, Edge, etc.) and you can interact with it!
+1. Open a *NEW* terminal window or tab.
 
-Method 2 (Using a Python Local Server):
-1. Open a *NEW* terminal window.
-2. Navigate to the project folder:
-   cd path\to\CognitoX.ai
-3. Run this command to serve the frontend:
-   python -m http.server 8000
-4. Open your browser and go to:
-   http://localhost:8000/Frontend/index.html
+2. Navigate to the React frontend folder:
+   cd CognitoX.ai/Frontend-React
+
+3. Install the node packages:
+   npm install
+
+4. Start the development server:
+   npm run dev
+
+5. Success! The frontend client will be running at:
+   http://localhost:5173/
+
 
 ---------------------------------------------------
 Adding your Machine Learning Model:
 ---------------------------------------------------
-1. Place your trained `.pkl` file inside the `Backend\models\` folder.
-2. Name it `learning_ability_model.pkl`.
-3. If no file is present, a dummy model is automatically used for testing.
+1. Place your trained `.pkl` files inside the `Backend/models/` folder.
+2. The main model file is named `learning_ability_model.pkl`.
+3. If no file is present, a robust dummy model is automatically used for testing.
 
 CI/CD Pipeline:
 ---------------
 This project includes a GitHub Actions workflow in `.github/workflows/ci-cd.yml`.
-When you push code to the `main` or `master` branch, it will automatically:
+When you push code, it will automatically:
 - Setup a Python environment.
 - Install the dependencies from `requirements.txt`.
-- Run tests located in `Backend/tests/test_app.py`.
+- Run pytest unit tests located in `Backend/tests/test_app.py`.
